@@ -28,7 +28,10 @@ npx quartz build --serve       # preview at http://localhost:8080
 
 The `content/` folder is also an Obsidian vault: open it in Obsidian to read or edit with the same links.
 
-**Cloudflare Pages build command:**
+**Deploying:** `sh scripts/deploy.sh` runs every check, builds, and publishes with wrangler (needs `npx wrangler login`
+once). The Cloudflare Git integration should also build each push to `main`, but its webhook has not been firing.
+
+**Cloudflare Pages build command** (for the Git integration):
 
 ```bash
 node scripts/link.mjs --check && node scripts/check.mjs && npx quartz plugin install && npx quartz build && node scripts/check-built.mjs public
