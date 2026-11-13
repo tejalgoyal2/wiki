@@ -9,6 +9,10 @@ Every **Check yourself** and **How interviews ask it** question in the wiki, in 
 or write it down **before** opening it: testing yourself is what makes knowledge stick. 44 questions so far. This page is generated from
 the notes, so it grows every day.
 
+> [!tip] Prefer flashcards?
+> **[Open the Quiz](/static/quiz/)**: the same questions as cards, scheduled with spaced repetition so each one comes
+> back just before you would forget it. Your progress stays in your browser.
+
 ## JavaScript
 
 ### From [[2026-11-11-event-loop|#1 · The event loop]]

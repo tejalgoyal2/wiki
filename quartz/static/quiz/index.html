@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz · wiki · tgoyal</title>
+<meta name="description" content="Every question in the wiki as flashcards, scheduled with spaced repetition (FSRS).">
+<link rel="icon" href="/static/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<script>
+  // Same theme as the wiki (Quartz stores it under "theme").
+  try {
+    const saved = localStorage.getItem("theme")
+    const dark = saved ? saved === "dark" : matchMedia("(prefers-color-scheme: dark)").matches
+    document.documentElement.dataset.theme = dark ? "dark" : "light"
+  } catch { document.documentElement.dataset.theme = "light" }
+</script>
+<style>
+  :root, :root[data-theme="light"] {
+    --bg: #f6f1e7; --card: #fffaf0; --line: #e6dcc8; --muted: #7a6f60; --text: #2a241e; --accent: #b5332b;
+    --again: #b5332b; --hard: #a86b12; --good: #2f6b3a; --easy: #285c8a; --code: #efe7d6;
+  }
+  :root[data-theme="dark"] {
+    --bg: #171513; --card: #1f1c19; --line: #2e2a25; --muted: #a89c8a; --text: #efe8da; --accent: #ef6a5c;
+    --again: #ef6a5c; --hard: #e0a24a; --good: #7cc48a; --easy: #7fb3e6; --code: #2a2622;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.6 "Source Serif 4", Georgia, serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+  a { color: var(--accent); }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  h1 { font: 600 32px/1.2 Fraunces, Georgia, serif; margin: 0; }
+  .muted { color: var(--muted); font-size: 15px; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 16px 0; }
+  select, button { font: inherit; font-size: 15px; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  .stats { display: flex; gap: 16px; flex-wrap: wrap; font-size: 15px; }
+  .stats b { font-family: Fraunces, Georgia, serif; font-size: 22px; display: block; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin-top: 16px; }
+  .kind { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .q { font: 600 22px/1.35 Fraunces, Georgia, serif; margin: 8px 0 16px; }
+  .a { border-top: 1px dashed var(--line); padding-top: 16px; }
+  .a[hidden] { display: none; }
+  code { font-family: "JetBrains Mono", monospace; font-size: .85em; background: var(--code); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--code); padding: 12px; border-radius: 8px; overflow-x: auto; }
+  pre code { padding: 0; background: none; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+  .actions button { flex: 1 1 120px; padding: 10px; }
+  .rate small { display: block; color: var(--muted); font-size: 12px; }
+  .again { border-color: var(--again); } .hard { border-color: var(--hard); } .good { border-color: var(--good); } .easy { border-color: var(--easy); }
+  .primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+  .done { text-align: center; padding: 32px 16px; }
+  footer { margin-top: 32px; font-size: 14px; color: var(--muted); }
+  footer button { font-size: 13px; padding: 3px 8px; }
+  kbd { font-family: "JetBrains Mono", monospace; font-size: 12px; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Quiz</h1>
+    <a href="/">← back to the wiki</a>
+  </header>
+  <p class="muted">Every question in the wiki as a flashcard. Answer in your head, open the answer, then say how it
+    went. Cards you find hard come back sooner; easy ones wait longer. That spacing is what moves knowledge into
+    long-term memory.</p>
+
+  <div class="stats" id="stats"></div>
+  <div class="bar">
+    <select id="track" aria-label="Track"></select>
+    <select id="mode" aria-label="Mode">
+      <option value="all">All questions</option>
+      <option value="interview">Interview questions only</option>
+    </select>
+  </div>
+
+  <section id="stage"></section>
+
+  <footer>
+    <p>Keys: <kbd>Space</kbd> show answer · <kbd>1</kbd> again · <kbd>2</kbd> hard · <kbd>3</kbd> good · <kbd>4</kbd> easy.
+      Scheduling by <a href="https://github.com/open-spaced-repetition/ts-fsrs">FSRS</a>, the algorithm Anki uses.
+      Progress is saved in this browser only.</p>
+    <p><button id="export">Export progress</button> <button id="import">Import</button> <button id="reset">Reset</button></p>
+  </footer>
+</main>
+
+<script type="module">
+import { fsrs, createEmptyCard, generatorParameters, Rating, State } from "https://cdn.jsdelivr.net/npm/ts-fsrs@6.0.0/+esm"
+import { marked } from "https://cdn.jsdelivr.net/npm/marked@18.2.0/+esm"
+
+const KEY = "wiki-quiz-v1"
+const NEW_PER_DAY = 10
+const f = fsrs(generatorParameters({ enable_fuzz: true }))
+const $ = (id) => document.getElementById(id)
+
+const data = await fetch("cards.json").then((r) => r.json())
+const allCards = data.cards
+
+// Saved state: { cards: { id: fsrsCard }, newToday: { date, count } }
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) ?? {} } catch { return {} }
+}
+let saved = load()
+saved.cards ??= {}
+const today = new Date().toISOString().slice(0, 10)
+if (saved.newToday?.date !== today) saved.newToday = { date: today, count: 0 }
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)) } catch {} }
+const revive = (c) => ({ ...c, due: new Date(c.due), last_review: c.last_review ? new Date(c.last_review) : undefined })
+
+// Filters
+$("track").innerHTML = `<option value="all">All tracks</option>` +
+  Object.entries(data.tracks).filter(([k]) => allCards.some((c) => c.track === k))
+    .map(([k, name]) => `<option value="${k}">${name}</option>`).join("")
+for (const id of ["track", "mode"]) $(id).addEventListener("change", next)
+
+function pool() {
+  const t = $("track").value, m = $("mode").value
+  return allCards.filter((c) => (t === "all" || c.track === t) && (m === "all" || c.kind === "interview"))
+}
+
+function pick() {
+  const now = new Date()
+  const cards = pool()
+  const due = cards.filter((c) => saved.cards[c.id] && revive(saved.cards[c.id]).due <= now)
+    .sort((a, b) => new Date(saved.cards[a.id].due) - new Date(saved.cards[b.id].due))
+  if (due.length) return { card: due[0], isNew: false }
+  if (saved.newToday.count < NEW_PER_DAY) {
+    const fresh = cards.find((c) => !saved.cards[c.id])
+    if (fresh) return { card: fresh, isNew: true }
+  }
+  return null
+}
+
+function renderStats() {
+  const now = new Date(), cards = pool()
+  const seen = cards.filter((c) => saved.cards[c.id])
+  const due = seen.filter((c) => revive(saved.cards[c.id]).due <= now).length
+  const fresh = Math.min(cards.length - seen.length, NEW_PER_DAY - saved.newToday.count)
+  const learned = seen.filter((c) => saved.cards[c.id].state === State.Review).length
+  $("stats").innerHTML = `<div><b>${due}</b>due now</div><div><b>${Math.max(fresh, 0)}</b>new today</div>` +
+    `<div><b>${learned}</b>learned</div><div><b>${cards.length}</b>in the deck</div>`
+}
+
+const when = (d) => {
+  const mins = Math.round((d - new Date()) / 60000)
+  if (mins < 60) return `${Math.max(mins, 1)} min`
+  if (mins < 60 * 24) return `${Math.round(mins / 60)} h`
+  return `${Math.round(mins / 1440)} d`
+}
+
+let current = null
+function next() {
+  renderStats()
+  current = pick()
+  if (!current) {
+    const upcoming = pool().map((c) => saved.cards[c.id]).filter(Boolean).map((c) => new Date(c.due)).sort((a, b) => a - b)[0]
+    $("stage").innerHTML = `<div class="card done"><p class="q">All caught up.</p>
+      <p class="muted">${upcoming ? `Next card in ${when(upcoming)}.` : "Nothing left in this selection."}
+      New questions arrive with every lesson.</p><p><a href="/practice">Browse every question</a></p></div>`
+    return
+  }
+  const c = current.card
+  $("stage").innerHTML = `<article class="card">
+    <div class="kind">${current.isNew ? "New · " : ""}${c.kind === "interview" ? "Interview question" : "Check yourself"} · ${data.tracks[c.track]}</div>
+    <div class="q">${marked.parseInline(c.q)}</div>
+    <div class="a" id="answer" hidden>${marked.parse(c.a)}
+      <p class="muted">From <a href="${c.from.url}">${c.from.title}</a></p></div>
+    <div class="actions" id="actions"><button class="primary" id="show">Show answer</button></div>
+  </article>`
+  $("show").onclick = reveal
+}
+
+function reveal() {
+  if (!current || !$("answer").hidden) return
+  $("answer").hidden = false
+  const card = saved.cards[current.card.id] ? revive(saved.cards[current.card.id]) : createEmptyCard(new Date())
+  const preview = f.repeat(card, new Date())
+  const btn = (r, cls, label) => `<button class="rate ${cls}" data-r="${r}">${label}<small>${when(preview[r].card.due)}</small></button>`
+  $("actions").innerHTML = btn(Rating.Again, "again", "Again") + btn(Rating.Hard, "hard", "Hard") +
+    btn(Rating.Good, "good", "Good") + btn(Rating.Easy, "easy", "Easy")
+  $("actions").querySelectorAll("button").forEach((b) => (b.onclick = () => rate(Number(b.dataset.r))))
+}
+
+function rate(r) {
+  if (!current || $("answer").hidden) return
+  const card = saved.cards[current.card.id] ? revive(saved.cards[current.card.id]) : createEmptyCard(new Date())
+  saved.cards[current.card.id] = f.next(card, new Date(), r).card
+  if (current.isNew) saved.newToday.count++
+  persist()
+  next()
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("select, input, textarea")) return
+  if (e.code === "Space") { e.preventDefault(); reveal() }
+  const r = { Digit1: Rating.Again, Digit2: Rating.Hard, Digit3: Rating.Good, Digit4: Rating.Easy }[e.code]
+  if (r) rate(r)
+})
+
+$("export").onclick = () => {
+  const blob = new Blob([JSON.stringify(saved)], { type: "application/json" })
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `wiki-quiz-${today}.json` })
+  a.click()
+}
+$("import").onclick = () => {
+  const input = Object.assign(document.createElement("input"), { type: "file", accept: "application/json" })
+  input.onchange = async () => {
+    try { saved = JSON.parse(await input.files[0].text()); saved.cards ??= {}; saved.newToday ??= { date: today, count: 0 }; persist(); next() }
+    catch { alert("That file is not a quiz export.") }
+  }
+  input.click()
+}
+$("reset").onclick = () => { if (confirm("Forget all quiz progress in this browser?")) { saved = { cards: {}, newToday: { date: today, count: 0 } }; persist(); next() } }
+
+next()
+</script>
+</body>
+</html>

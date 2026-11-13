@@ -1,0 +1,496 @@
+{
+ "tracks": {
+  "javascript": "JavaScript",
+  "python-data": "Python & Data",
+  "ml": "ML & Data Science",
+  "llm-rag": "LLMs & RAG",
+  "backend": "Backend & System Design",
+  "cs-fundamentals": "CS Fundamentals"
+ },
+ "cards": [
+  {
+   "id": "11ches1",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "JavaScript is single-threaded. So how can it do several things at the same time?",
+   "a": "The JavaScript engine runs my code on one thread, but the environment around it (the browser or Node) is not\nsingle-threaded. Timers, network requests and file reads are done by the environment. When one finishes, its\ncallback goes into a queue, and the event loop runs it when the call stack is empty. Promise callbacks go into a\nseparate microtask queue that is fully emptied after each task, so they run before timers. So JavaScript is\n[concurrent](/concepts/concurrency-vs-parallelism) (many things in progress) without being parallel (two pieces of my code running at the same moment),\nunless I use Web Workers or worker threads.",
+   "from": {
+    "title": "#1 · The event loop",
+    "url": "/lessons/2026-11-11-event-loop"
+   }
+  },
+  {
+   "id": "usq2yw",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "What does this print?",
+   "a": "```js run\nsetTimeout(() => console.log(1));\nPromise.resolve().then(() => {\n  console.log(2);\n  setTimeout(() => console.log(3));\n});\nPromise.resolve().then(() => console.log(4));\nconsole.log(5);\n```\n\n**5, 2, 4, 1, 3.** 5 is synchronous. Then the microtasks: 2 (which schedules timer 3 behind timer 1), then 4. Then\nthe tasks in order: 1, then 3.",
+   "from": {
+    "title": "#1 · The event loop",
+    "url": "/lessons/2026-11-11-event-loop"
+   }
+  },
+  {
+   "id": "8b8cpf",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "Write a sleep function and use it.",
+   "a": "```js run\nconst sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\nasync function demo() {\n  console.log('wait...');\n  await sleep(1000);\n  console.log('one second later');\n}\n\ndemo();\n```\n\nThe usual follow-up: \"Does `sleep` block the page?\" No. `await` gives the thread back; the rest of `demo` comes back\nas a microtask after the timer task resolves the promise.",
+   "from": {
+    "title": "#1 · The event loop",
+    "url": "/lessons/2026-11-11-event-loop"
+   }
+  },
+  {
+   "id": "o5yppp",
+   "track": "javascript",
+   "kind": "check",
+   "q": "After a script finishes, which runs first: a `setTimeout(fn, 0)` callback or a `.then` callback? Why?",
+   "a": "The `.then` callback. It is a microtask, and all microtasks run as soon as the current task (the script) ends,\nbefore the loop takes the next task, which is where the timer callback waits.",
+   "from": {
+    "title": "#1 · The event loop",
+    "url": "/lessons/2026-11-11-event-loop"
+   }
+  },
+  {
+   "id": "hrfvmt",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Why can an endless chain of promise callbacks freeze a page, while an endless chain of `setTimeout` calls does not?",
+   "a": "The microtask queue must be completely empty before the browser can paint or take the next task. A promise chain\nkeeps refilling it, so that never happens. Each `setTimeout` callback is a separate task, and the browser can paint\nand handle input between tasks.",
+   "from": {
+    "title": "#1 · The event loop",
+    "url": "/lessons/2026-11-11-event-loop"
+   }
+  },
+  {
+   "id": "1u0075h",
+   "track": "javascript",
+   "kind": "check",
+   "q": "When you call an `async` function, which part of its body runs immediately?",
+   "a": "Everything up to the first `await`. At that point the function returns a pending promise to the caller, and the rest\nruns later as a microtask, once the awaited value is ready.",
+   "from": {
+    "title": "#1 · The event loop",
+    "url": "/lessons/2026-11-11-event-loop"
+   }
+  },
+  {
+   "id": "ttnvld",
+   "track": "javascript",
+   "kind": "check",
+   "q": "What does calling an async function return immediately?",
+   "a": "A pending promise. Its body has run only up to the first `await`.",
+   "from": {
+    "title": "async / await",
+    "url": "/concepts/async-await"
+   }
+  },
+  {
+   "id": "1qgqtmh",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Two independent API calls are awaited one after the other. How do you make them faster?",
+   "a": "Start both, then `await Promise.all([...])`, so they wait at the same time.",
+   "from": {
+    "title": "async / await",
+    "url": "/concepts/async-await"
+   }
+  },
+  {
+   "id": "1uxgwjm",
+   "track": "javascript",
+   "kind": "check",
+   "q": "What has to be true before a queued callback can run?",
+   "a": "The call stack must be empty. Then all microtasks run first, and only after that the next task.",
+   "from": {
+    "title": "Event loop",
+    "url": "/concepts/event-loop"
+   }
+  },
+  {
+   "id": "1ra71z1",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Why can a page stay responsive while it waits for a network request?",
+   "a": "The request is handled by the browser outside the JavaScript thread. The thread is free until the response's callback is queued and run.",
+   "from": {
+    "title": "Event loop",
+    "url": "/concepts/event-loop"
+   }
+  },
+  {
+   "id": "1vzl7qd",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Why does `.then` run before `setTimeout(fn, 0)`?",
+   "a": "`.then` callbacks are microtasks, and the microtask queue is emptied right after the current task; the timer callback is a separate task that waits for a later turn.",
+   "from": {
+    "title": "Microtask queue",
+    "url": "/concepts/microtask-queue"
+   }
+  },
+  {
+   "id": "1dwzequ",
+   "track": "javascript",
+   "kind": "check",
+   "q": "What happens if microtasks keep adding microtasks forever?",
+   "a": "The queue never empties, so the browser never renders or handles input: the page freezes.",
+   "from": {
+    "title": "Microtask queue",
+    "url": "/concepts/microtask-queue"
+   }
+  },
+  {
+   "id": "1kgfmuk",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Does the executor function passed to `new Promise` run now or later?",
+   "a": "Now, synchronously. Only the `.then` callbacks run later, as microtasks.",
+   "from": {
+    "title": "Promise",
+    "url": "/concepts/promise"
+   }
+  },
+  {
+   "id": "15mfth1",
+   "track": "javascript",
+   "kind": "check",
+   "q": "You need results from five requests, but one failing should not lose the other four. Which method?",
+   "a": "`Promise.allSettled`.",
+   "from": {
+    "title": "Promise",
+    "url": "/concepts/promise"
+   }
+  },
+  {
+   "id": "1tc4n77",
+   "track": "javascript",
+   "kind": "check",
+   "q": "How many tasks does the event loop run before it empties the microtask queue?",
+   "a": "One.",
+   "from": {
+    "title": "Task queue",
+    "url": "/concepts/task-queue"
+   }
+  },
+  {
+   "id": "163proh",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Name three things that create tasks.",
+   "a": "Timers (`setTimeout`, `setInterval`), user events like clicks, and I/O callbacks such as network or file responses.",
+   "from": {
+    "title": "Task queue",
+    "url": "/concepts/task-queue"
+   }
+  },
+  {
+   "id": "u3yiqs",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Why can't a worker update the page directly?",
+   "a": "Workers have no access to the DOM. They send results back with `postMessage`, and the main thread updates the page.",
+   "from": {
+    "title": "Web Worker",
+    "url": "/concepts/web-worker"
+   }
+  },
+  {
+   "id": "1v1dydy",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Your page freezes for 2 seconds while sorting a huge array. What are two fixes?",
+   "a": "Move the sort into a Web Worker, or split the work into small chunks scheduled with `setTimeout` so the browser can paint between them.",
+   "from": {
+    "title": "Web Worker",
+    "url": "/concepts/web-worker"
+   }
+  },
+  {
+   "id": "bjcxiv",
+   "track": "python-data",
+   "kind": "interview",
+   "q": "Is Python pass by value or pass by reference?",
+   "a": "Neither exactly. Python passes a reference to the object, and the parameter becomes a new name bound to that same\nobject. If the function mutates the object, for example appending to a list, the caller sees it. If the function\nrebinds the parameter with `=`, only the local name moves and the caller is not affected. With immutable objects\nlike ints and strings you cannot mutate, so it looks like pass by value. People call this pass by object reference,\nor pass by assignment.",
+   "from": {
+    "title": "#2 · Python's object model",
+    "url": "/lessons/2026-11-12-python-object-model"
+   }
+  },
+  {
+   "id": "94t4kr",
+   "track": "python-data",
+   "kind": "interview",
+   "q": "What does this print, and how would you fix it?",
+   "a": "```py run\ndef f(n, seen=set()):\n    seen.add(n)\n    return len(seen)\nprint(f(1), f(2), f(1))\n```\n\n**1 2 2.** The default `set()` was created once, when the function was defined, so all three calls share it. Fix:\ndefault to `None` and create a new set inside the function when the argument is `None`.",
+   "from": {
+    "title": "#2 · Python's object model",
+    "url": "/lessons/2026-11-12-python-object-model"
+   }
+  },
+  {
+   "id": "100gu33",
+   "track": "python-data",
+   "kind": "interview",
+   "q": "Hard mode: what happens here?",
+   "a": "```py\nt = ([1], 2)\nt[0] += [3]\n```\n\nIt raises `TypeError: 'tuple' object does not support item assignment`, **and** `t` is now `([1, 3], 2)`.\n`t[0] += [3]` runs in two steps: first the list's in-place add mutates the list (this works), then Python tries to\nstore the result back into `t[0]` (this fails, because tuples cannot be assigned to). It shows exactly the difference\nbetween mutating an object and rebinding a slot.",
+   "from": {
+    "title": "#2 · Python's object model",
+    "url": "/lessons/2026-11-12-python-object-model"
+   }
+  },
+  {
+   "id": "1ryqx5z",
+   "track": "python-data",
+   "kind": "check",
+   "q": "What is the difference between `a == b` and `a is b`, and when should you use `is`?",
+   "a": "`==` compares values (it calls `__eq__`); `is` checks whether both names point at the very same object. Use `is`\nonly for singletons such as `None`, `True` and `False`; use `==` for everything else.",
+   "from": {
+    "title": "#2 · Python's object model",
+    "url": "/lessons/2026-11-12-python-object-model"
+   }
+  },
+  {
+   "id": "1mygj7x",
+   "track": "python-data",
+   "kind": "check",
+   "q": "Why does `def f(x, items=[])` keep items from earlier calls, and what is the fix?",
+   "a": "Default values are evaluated once, when the `def` line runs, and the same list object is reused on every call, so\nappends pile up. Fix: use `items=None` and create a new list inside the function when `items is None`.",
+   "from": {
+    "title": "#2 · Python's object model",
+    "url": "/lessons/2026-11-12-python-object-model"
+   }
+  },
+  {
+   "id": "1e2xqky",
+   "track": "python-data",
+   "kind": "check",
+   "q": "You copy a list of lists with `new = old.copy()` and then change `new[0][0]`. Does `old` change? Why?",
+   "a": "Yes. `.copy()` is shallow: it makes a new outer list holding the same inner lists, so `new[0]` and `old[0]` are the\nsame object. Use `copy.deepcopy(old)` to copy the inner lists too.",
+   "from": {
+    "title": "#2 · Python's object model",
+    "url": "/lessons/2026-11-12-python-object-model"
+   }
+  },
+  {
+   "id": "1s0sf78",
+   "track": "python-data",
+   "kind": "check",
+   "q": "You use 8 threads to resize 8,000 images in pure Python and it is no faster. Why, and what do you change?",
+   "a": "The work is CPU-bound and the GIL lets one thread run Python at a time. Use processes (`ProcessPoolExecutor`) or a library that releases the GIL.",
+   "from": {
+    "title": "GIL (Global Interpreter Lock)",
+    "url": "/concepts/gil"
+   }
+  },
+  {
+   "id": "1wq0mhq",
+   "track": "python-data",
+   "kind": "check",
+   "q": "Why do threads still help a script that downloads 100 web pages?",
+   "a": "Downloading is mostly waiting, and the GIL is released while a thread waits on I/O, so the downloads overlap.",
+   "from": {
+    "title": "GIL (Global Interpreter Lock)",
+    "url": "/concepts/gil"
+   }
+  },
+  {
+   "id": "sqfimt",
+   "track": "python-data",
+   "kind": "check",
+   "q": "Why does `x += 1` on an int never affect another name that pointed at the same int?",
+   "a": "Ints are immutable, so `+=` builds a new int and rebinds `x`; the other name still points at the old one.",
+   "from": {
+    "title": "Mutability",
+    "url": "/concepts/mutability"
+   }
+  },
+  {
+   "id": "ovier5",
+   "track": "python-data",
+   "kind": "check",
+   "q": "Does `const` make a JavaScript array immutable?",
+   "a": "No. `const` only prevents assigning a new value to the name. The array itself can still be mutated.",
+   "from": {
+    "title": "Mutability",
+    "url": "/concepts/mutability"
+   }
+  },
+  {
+   "id": "q90zad",
+   "track": "python-data",
+   "kind": "check",
+   "q": "You shallow-copy a list of lists and change `copy[0][0]`. What happens to the original?",
+   "a": "It changes too: both outer lists hold the same inner lists.",
+   "from": {
+    "title": "Shallow vs deep copy",
+    "url": "/concepts/shallow-vs-deep-copy"
+   }
+  },
+  {
+   "id": "nmjd5",
+   "track": "python-data",
+   "kind": "check",
+   "q": "What is the modern built-in way to deep-copy in JavaScript?",
+   "a": "`structuredClone(value)`.",
+   "from": {
+    "title": "Shallow vs deep copy",
+    "url": "/concepts/shallow-vs-deep-copy"
+   }
+  },
+  {
+   "id": "1pbdr28",
+   "track": "backend",
+   "kind": "check",
+   "q": "What does the JVM run, and why does that make Java portable?",
+   "a": "It runs bytecode. The same bytecode runs on any OS that has a JVM, so you compile once.",
+   "from": {
+    "title": "Java",
+    "url": "/concepts/java"
+   }
+  },
+  {
+   "id": "o6w43g",
+   "track": "backend",
+   "kind": "check",
+   "q": "What is the Java equivalent of Python's dict?",
+   "a": "`Map`, most often the `HashMap` implementation.",
+   "from": {
+    "title": "Java",
+    "url": "/concepts/java"
+   }
+  },
+  {
+   "id": "1cs4v4u",
+   "track": "backend",
+   "kind": "check",
+   "q": "Why do microservices make \"one transaction across everything\" hard?",
+   "a": "Each service owns its own database, so there is no single database transaction that covers all of them; you need patterns like sagas or events instead.",
+   "from": {
+    "title": "Microservices",
+    "url": "/concepts/microservices"
+   }
+  },
+  {
+   "id": "1cimdzs",
+   "track": "backend",
+   "kind": "check",
+   "q": "Name one good reason to split a service out of a monolith.",
+   "a": "One part needs to scale very differently (for example search under heavy load), or a separate team needs to deploy it on its own schedule.",
+   "from": {
+    "title": "Microservices",
+    "url": "/concepts/microservices"
+   }
+  },
+  {
+   "id": "m160j9",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "What is the time complexity of checking `if x in my_list` inside a loop over `my_list`?",
+   "a": "O(n²): an O(n) membership test, n times. Turning the list into a set first makes it O(n).",
+   "from": {
+    "title": "Big-O notation",
+    "url": "/concepts/big-o-notation"
+   }
+  },
+  {
+   "id": "1usgr6c",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Why do we drop constants, so that 5n and n are both O(n)?",
+   "a": "Big-O describes growth. As n gets large, the shape of the curve dominates; constants depend on hardware and details.",
+   "from": {
+    "title": "Big-O notation",
+    "url": "/concepts/big-o-notation"
+   }
+  },
+  {
+   "id": "1553evd",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "What does a stack frame hold?",
+   "a": "The function's arguments, its local variables, and where to return to when it finishes.",
+   "from": {
+    "title": "Call stack",
+    "url": "/concepts/call-stack"
+   }
+  },
+  {
+   "id": "41ys4k",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Why does infinite recursion crash instead of running forever?",
+   "a": "Each call adds a frame and none are removed, so the fixed-size stack fills up and the runtime raises an error.",
+   "from": {
+    "title": "Call stack",
+    "url": "/concepts/call-stack"
+   }
+  },
+  {
+   "id": "bd5jrf",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Is a Node.js server handling 1,000 open requests concurrent, parallel, or both?",
+   "a": "Concurrent. Its JavaScript runs on one thread; the requests are in progress together but don't execute at the same instant (unless you add worker threads or more processes).",
+   "from": {
+    "title": "Concurrency vs parallelism",
+    "url": "/concepts/concurrency-vs-parallelism"
+   }
+  },
+  {
+   "id": "1642f1c",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Your program spends most of its time waiting for an API. Concurrency or parallelism?",
+   "a": "Concurrency: overlap the waiting. More cores won't help code that is idle.",
+   "from": {
+    "title": "Concurrency vs parallelism",
+    "url": "/concepts/concurrency-vs-parallelism"
+   }
+  },
+  {
+   "id": "1pg7ww9",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Why is a dict lookup O(1) on average but O(n) in the worst case?",
+   "a": "The hash picks the slot directly. If many keys collide in the same slot, the lookup has to walk through all of them.",
+   "from": {
+    "title": "Hash map",
+    "url": "/concepts/hash-map"
+   }
+  },
+  {
+   "id": "zmco2k",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Why can't a Python list be a dict key?",
+   "a": "Lists are [mutable](/concepts/mutability), so their hash could change after insertion and the key would be lost in the wrong slot. Python makes lists unhashable.",
+   "from": {
+    "title": "Hash map",
+    "url": "/concepts/hash-map"
+   }
+  },
+  {
+   "id": "1tvsln8",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "What do two threads of the same process share, and what don't they share?",
+   "a": "They share the process's memory (heap, globals). Each has its own call stack and registers.",
+   "from": {
+    "title": "Thread",
+    "url": "/concepts/thread"
+   }
+  },
+  {
+   "id": "q110uz",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Why don't Python threads speed up a CPU-heavy loop in standard CPython?",
+   "a": "The GIL lets only one thread execute Python bytecode at a time. Use processes (multiprocessing) or the free-threaded build instead.",
+   "from": {
+    "title": "Thread",
+    "url": "/concepts/thread"
+   }
+  }
+ ]
+}

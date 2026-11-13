@@ -8,7 +8,9 @@ Read it at **https://wiki.tgoyal.me**.
 
 - Notes are Markdown in `content/`, written to the rules in [SCHEMA.md](SCHEMA.md).
 - [Quartz 5](https://quartz.jzhao.xyz/) turns them into the site (links, backlinks, hover previews, search, graph).
-- `scripts/generate.mjs` writes the Read first / Leads to blocks, the Glossary and the Practice page.
+- `scripts/generate.mjs` writes the Read first / Leads to blocks, the Glossary, Practice and Traps pages, the Quiz deck and the home-page stats.
+- `scripts/market.mjs` writes the job-market page from lockin's public gap report.
+- `quartz/static/quiz/` is the Quiz: flashcards with FSRS spaced repetition, progress kept in the browser.
 - `scripts/link.mjs` links the first mention of every note's name on every page.
 - `scripts/check.mjs` checks frontmatter and links, and runs every code block marked `run`.
 - `scripts/check-built.mjs` checks the built site for broken links.

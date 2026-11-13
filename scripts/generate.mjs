@@ -6,8 +6,8 @@
 //
 //   node scripts/generate.mjs          write
 //   node scripts/generate.mjs --check  exit 1 if anything would change (for CI)
-import { writeFileSync, readFileSync, existsSync } from "node:fs"
-import { join } from "node:path"
+import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs"
+import { join, dirname } from "node:path"
 import { loadNotes, CONTENT } from "./notes.mjs"
 
 const check = process.argv.includes("--check")
@@ -31,7 +31,10 @@ function write(path, text, rel) {
   if (old === text) return
   changed++
   if (check) console.log(`would update: ${rel}`)
-  else writeFileSync(path, text)
+  else {
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(path, text)
+  }
 }
 
 // 1. Learning order: requires -> "Read first", reverse -> "Leads to"
@@ -109,7 +112,24 @@ nolink: true
 Every **Check yourself** and **How interviews ask it** question in the wiki, in one place. Say the answer out loud
 or write it down **before** opening it: testing yourself is what makes knowledge stick. This page is generated from
 the notes, so it grows every day.
+
+> [!tip] Prefer flashcards?
+> **[Open the Quiz](/static/quiz/)**: the same questions as cards, scheduled with spaced repetition so each one comes
+> back just before you would forget it. Your progress stays in your browser.
 `
+// URL of a note, for links outside Quartz (the quiz app)
+const urlOf = (slug) => (bySlug.has(slug) ? "/" + bySlug.get(slug).rel.replace(/\.md$/, "") : null)
+const plainLinks = (md) =>
+  md.replace(/\[\[([^\]|\\]+)(?:\\?\|([^\]]+))?\]\]/g, (_, slug, text) => {
+    const url = urlOf(slug.trim())
+    return url ? `[${text ?? slug}](${url})` : text ?? slug
+  })
+const hash = (s) => {
+  let h = 2166136261
+  for (const c of s) h = Math.imul(h ^ c.codePointAt(0), 16777619)
+  return (h >>> 0).toString(36)
+}
+const cards = []
 let count = 0
 for (const [key, name] of TRACKS) {
   const sources = notes
@@ -117,15 +137,79 @@ for (const [key, name] of TRACKS) {
     .sort((a, b) => String(a.data.created).localeCompare(String(b.data.created)) || a.slug.localeCompare(b.slug))
   const sections = []
   for (const n of sources) {
-    const qs = [...questionBlocks(n.body, "How interviews ask it"), ...questionBlocks(n.body, "Check yourself")]
+    const kinds = [
+      ["interview", questionBlocks(n.body, "How interviews ask it")],
+      ["check", questionBlocks(n.body, "Check yourself")],
+    ]
+    const qs = kinds.flatMap(([, b]) => b)
     if (!qs.length) continue
     count += qs.length
     sections.push(`### From ${link(n)}\n\n${qs.join("\n\n")}`)
+    for (const [kind, blocks] of kinds) {
+      for (const b of blocks) {
+        const [first, ...rest] = b.split("\n")
+        const q = first.replace(/^> \[!question\]-?\s*/, "").replace(/^"(.*)"$/, "$1")
+        const a = rest.map((l) => l.replace(/^> ?/, "")).join("\n").trim()
+        cards.push({ id: hash(n.slug + "\n" + q), track: key, kind, q: plainLinks(q), a: plainLinks(a), from: { title: n.data.title, url: urlOf(n.slug) } })
+      }
+    }
   }
   if (sections.length) practice += `\n## ${name}\n\n${sections.join("\n\n")}\n`
 }
 practice = practice.replace("This page is generated", `${count} questions so far. This page is generated`)
 write(join(CONTENT, "practice.md"), practice, "practice.md")
+
+// 4. Quiz data for /static/quiz/
+const QUIZ = new URL("../quartz/static/quiz/", import.meta.url).pathname
+write(join(QUIZ, "cards.json"), JSON.stringify({ tracks: Object.fromEntries(TRACKS), cards }, null, 1) + "\n", "quartz/static/quiz/cards.json")
+
+// 5. Common traps: every "## Traps" section in one page
+function section(body, heading) {
+  const lines = body.split("\n")
+  const start = lines.findIndex((l) => l.trim() === `## ${heading}`)
+  if (start < 0) return null
+  const out = []
+  for (let i = start + 1; i < lines.length && !/^## /.test(lines[i]) && !/^<!-- leads-to -->/.test(lines[i]); i++) out.push(lines[i])
+  return out.join("\n").trim() || null
+}
+let traps = `---
+title: Common traps
+description: Every trap, gotcha and misconception from the wiki in one page, grouped by track.
+generated: true
+nolink: true
+---
+
+The mistakes that bite people in real code and in interviews, collected from every note. Each one links back to the
+note that explains it. This page is generated, so it grows as the wiki does.
+`
+let trapCount = 0
+for (const [key, name] of TRACKS) {
+  const parts = notes
+    .filter((n) => n.data.track === key && !n.data.generated)
+    .sort((a, b) => a.data.title.localeCompare(b.data.title))
+    .map((n) => [n, section(n.body, "Traps")])
+    .filter(([, s]) => s)
+  if (!parts.length) continue
+  trapCount += parts.length
+  traps += `\n## ${name}\n\n` + parts.map(([n, s]) => `### ${link(n)}\n\n${s}`).join("\n\n") + "\n"
+}
+write(join(CONTENT, "traps.md"), traps, "traps.md")
+
+// 6. Stats on the home page
+const realNotes = notes.filter((n) => n.data.type)
+const edges = new Set()
+for (const n of realNotes)
+  for (const m of n.body.matchAll(/\[\[([^\]|#\\]+)/g)) if (bySlug.has(m[1].trim()) && m[1].trim() !== n.slug) edges.add(n.slug + ">" + m[1].trim())
+const countType = (t) => realNotes.filter((n) => n.data.type === t).length
+const stats =
+  `<!-- stats -->\n**The wiki today:** ${countType("lesson")} lessons · ${countType("concept")} concepts · ` +
+  `${countType("puzzle")} puzzles · ${edges.size} links between notes · ${cards.length} practice questions\n<!-- /stats -->`
+const index = bySlug.get("index")
+if (index) {
+  const STATS = /<!-- stats -->[\s\S]*?<!-- \/stats -->/
+  const body = STATS.test(index.body) ? index.body.replace(STATS, stats) : index.body.replace(/^\n*/, "\n" + stats + "\n\n")
+  write(index.path, index.fm + body, index.rel)
+}
 
 for (const p of problems) console.log("  - " + p)
 console.log(`${check ? "files needing regeneration" : "files updated"}: ${changed}`)

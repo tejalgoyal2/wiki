@@ -19,7 +19,7 @@ const broken = new Set()
 for (const page of pages) {
   const html = readFileSync(page, "utf8")
   for (const [, href] of html.matchAll(/<a [^>]*href="([^"]+)"/g)) {
-    if (/^(https?:|mailto:|#|data:)/.test(href)) continue
+    if (/^(https?:|mailto:|#|data:)/.test(href) || href.includes("${")) continue // ${...}: a template inside a script
     const path = href.split(/[#?]/)[0]
     if (!path) continue
     const target = path.startsWith("/") ? join(root, path) : resolve(dirname(page), path)

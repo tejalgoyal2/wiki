@@ -45,6 +45,12 @@ Never edit these by hand; `scripts/generate.mjs` rewrites them:
 - the `<!-- read-first -->` and `<!-- leads-to -->` blocks inside notes;
 - `content/glossary.md` (every concept and pattern with its `description`, so descriptions must stand alone);
 - `content/practice.md` (every `> [!question]` callout under **Check yourself** and **How interviews ask it**).
+- `content/traps.md` (every `## Traps` section);
+- `quartz/static/quiz/cards.json` (the same questions as flashcards for the Quiz at `/static/quiz/`);
+- the `<!-- stats -->` line on the home page.
+
+`scripts/market.mjs` writes `content/market.md` from lockin's public gap report. It needs the network, so it runs in
+the daily job, not in CI.
 
 Order of the scripts: `generate.mjs`, then `link.mjs`, then `check.mjs`.
 

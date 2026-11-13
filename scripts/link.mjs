@@ -37,7 +37,7 @@ const termRe = new Map(
 const PROTECTED = /(`[^`]*`|\[\[[^\]]*\]\]|!?\[[^\]]*\]\([^)]*\)|https?:\/\/\S+|<[^>]+>|\$[^$]+\$)/g
 
 // Blocks written by scripts/generate.mjs: never edited here, and their links don't count as "already linked".
-const GENERATED = /<!-- (read-first|leads-to) -->[\s\S]*?<!-- \/\1 -->/g
+const GENERATED = /<!-- (read-first|leads-to|stats) -->[\s\S]*?<!-- \/\1 -->/g
 
 const linkedTargets = (body) =>
   new Set([...body.replace(GENERATED, "").matchAll(/\[\[([^\]|#\\]+)/g)].map((m) => m[1].trim().toLowerCase()))
@@ -73,8 +73,8 @@ for (const n of notes) {
   let inGenerated = false
   const out = n.body.split("\n").map((raw) => {
     const line = unquote(raw)
-    if (/^<!-- (read-first|leads-to) -->$/.test(raw.trim())) inGenerated = true
-    if (/^<!-- \/(read-first|leads-to) -->$/.test(raw.trim())) {
+    if (/^<!-- (read-first|leads-to|stats) -->$/.test(raw.trim())) inGenerated = true
+    if (/^<!-- \/(read-first|leads-to|stats) -->$/.test(raw.trim())) {
       inGenerated = false
       return raw
     }
