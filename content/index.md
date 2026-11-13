@@ -4,7 +4,7 @@ description: A growing, linked wiki of software, data and ML. One deep lesson a 
 ---
 
 <!-- stats -->
-**The wiki today:** 3 lessons · 21 concepts · 3 puzzles · 145 links between notes · 62 practice questions
+**The wiki today:** 3 lessons · 21 concepts · 3 puzzles · 158 links between notes · 62 practice questions
 <!-- /stats -->
 
 A wiki that grows by one lesson a day. Each lesson teaches one idea properly, and every term in it links to its own

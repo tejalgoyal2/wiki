@@ -253,7 +253,7 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - **A big gap is not always overfitting.** If test data comes from a different time or population than the training
   data, the gap can be distribution shift. Check the split before adding regularisation.
 - **A suspiciously good validation score is not a good fit.** It is more often [[data-leakage|data leakage]].
-- **Choosing among many models can overfit the validation set.** That is why the final number comes from a test set
+- **Choosing among many models can overfit the [[train-validation-test-split|validation set]].** That is why the final number comes from a test set
   you did not use for choices.
 
 ### [[train-validation-test-split|Train, validation and test split]]
