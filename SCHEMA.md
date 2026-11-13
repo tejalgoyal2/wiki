@@ -33,6 +33,21 @@ updated: 2026-11-11
 
 Lessons also have `lesson: <number>`, `puzzle: <puzzle note name>` and `market_word: <term>`.
 
+Any note may have `requires: [slug, slug]`: the notes a reader should know **first** (2-3 at most, the direct ones,
+not everything upstream). `scripts/generate.mjs` turns this into a "Read first" box at the top of the note and a
+"Leads to" list at the bottom of each required note. Never point `requires` in a circle. Puzzles have no `requires`:
+it would give the answer away.
+
+## Generated pages and blocks
+
+Never edit these by hand; `scripts/generate.mjs` rewrites them:
+
+- the `<!-- read-first -->` and `<!-- leads-to -->` blocks inside notes;
+- `content/glossary.md` (every concept and pattern with its `description`, so descriptions must stand alone);
+- `content/practice.md` (every `> [!question]` callout under **Check yourself** and **How interviews ask it**).
+
+Order of the scripts: `generate.mjs`, then `link.mjs`, then `check.mjs`.
+
 ## Links
 
 - Write plain text. `scripts/link.mjs` turns the first mention of every note title or alias on a page into a link.
@@ -49,6 +64,17 @@ Lessons also have `lesson: <number>`, `puzzle: <puzzle note name>` and `market_w
 - Code that is meant to run gets `run` after the language (` ```js run `). `scripts/check.mjs` runs it; a failing block fails the build.
   Snippets that must not run (infinite loops, browser-only APIs) are left without `run`.
 - Facts that depend on a version name the version (Python 3.13, Node 22, Java 25).
+
+## Make it informative, not just correct
+
+- **A picture when there is a process or a structure.** Use a Mermaid diagram (` ```mermaid `): a flowchart for a loop
+  or a decision, a sequence diagram for a request between services, a state diagram for a lifecycle. One per note is plenty.
+- **In the wild.** Where it exists, a `## In the wild` section: a real incident, postmortem or engineering-blog story
+  where this concept mattered, with a link to the primary write-up and only facts that write-up states.
+  Good places: company postmortems (Cloudflare, GitHub, Stack Overflow), [danluu/post-mortems](https://github.com/danluu/post-mortems).
+- **See it run.** For Python (and small JavaScript) examples about memory, references or recursion, add a
+  "step through it" link to Python Tutor (`https://pythontutor.com/visualize.html#code=<url-encoded code>&mode=display&py=3`).
+- **Paths.** When a track has 5+ connected notes, write a `paths/` note that orders them for a beginner.
 
 ## Sources and licenses
 

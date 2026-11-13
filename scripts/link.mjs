@@ -36,8 +36,11 @@ const termRe = new Map(
 // Spans that must never be touched.
 const PROTECTED = /(`[^`]*`|\[\[[^\]]*\]\]|!?\[[^\]]*\]\([^)]*\)|https?:\/\/\S+|<[^>]+>|\$[^$]+\$)/g
 
+// Blocks written by scripts/generate.mjs: never edited here, and their links don't count as "already linked".
+const GENERATED = /<!-- (read-first|leads-to) -->[\s\S]*?<!-- \/\1 -->/g
+
 const linkedTargets = (body) =>
-  new Set([...body.matchAll(/\[\[([^\]|#\\]+)/g)].map((m) => m[1].trim().toLowerCase()))
+  new Set([...body.replace(GENERATED, "").matchAll(/\[\[([^\]|#\\]+)/g)].map((m) => m[1].trim().toLowerCase()))
 
 function linkLine(line, linked, self, inTable) {
   for (const term of ordered) {
@@ -67,8 +70,15 @@ for (const n of notes) {
   if (n.data.nolink) continue
   const linked = linkedTargets(n.body)
   let inFence = false
+  let inGenerated = false
   const out = n.body.split("\n").map((raw) => {
     const line = unquote(raw)
+    if (/^<!-- (read-first|leads-to) -->$/.test(raw.trim())) inGenerated = true
+    if (/^<!-- \/(read-first|leads-to) -->$/.test(raw.trim())) {
+      inGenerated = false
+      return raw
+    }
+    if (inGenerated) return raw
     if (/^(```|~~~)/.test(line.trim())) {
       inFence = !inFence
       return raw

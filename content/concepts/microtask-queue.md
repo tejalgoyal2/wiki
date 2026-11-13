@@ -3,6 +3,7 @@ title: Microtask queue
 aliases: [microtask, microtasks, queueMicrotask]
 type: concept
 track: javascript
+requires: [task-queue, promise]
 description: A high-priority queue for promise callbacks and await continuations. It is emptied completely after every task.
 depth: solid
 sources:
@@ -11,6 +12,10 @@ sources:
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[task-queue|Task queue]] · [[promise|Promise]]
+<!-- /read-first -->
 
 Microtasks are small jobs that must run **as soon as the current task finishes**, before the next task and before the
 next paint. They are why [[promise|promise]] callbacks run before timers.
@@ -50,3 +55,9 @@ setTimeout(() => console.log('task'), 0);
 
 > [!question]- What happens if microtasks keep adding microtasks forever?
 > The queue never empties, so the browser never renders or handles input: the page freezes.
+
+<!-- leads-to -->
+## Leads to
+
+- [[async-await|async / await]]: Syntax that lets promise-based code read top to bottom. An async function always returns a promise; await pauses only that function.
+<!-- /leads-to -->

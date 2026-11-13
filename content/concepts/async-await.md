@@ -3,6 +3,7 @@ title: async / await
 aliases: [async/await, async function, async functions, await]
 type: concept
 track: javascript
+requires: [promise, microtask-queue]
 description: Syntax that lets promise-based code read top to bottom. An async function always returns a promise; await pauses only that function.
 depth: solid
 sources:
@@ -11,6 +12,10 @@ sources:
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[promise|Promise]] · [[microtask-queue|Microtask queue]]
+<!-- /read-first -->
 
 `async` and `await` are a nicer way to write [[promise|promise]] chains. The code reads like normal step-by-step
 code, but it does not block the [[thread|thread]].

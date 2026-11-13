@@ -57,3 +57,9 @@ console.log(arr);       // [ 1, 2, 3 ]
 
 > [!question]- Does `const` make a JavaScript array immutable?
 > No. `const` only prevents assigning a new value to the name. The array itself can still be mutated.
+
+<!-- leads-to -->
+## Leads to
+
+- [[shallow-vs-deep-copy|Shallow vs deep copy]]: A shallow copy makes a new outer container that holds the same inner objects; a deep copy copies everything all the way down.
+<!-- /leads-to -->

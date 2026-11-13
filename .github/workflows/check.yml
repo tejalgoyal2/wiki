@@ -24,6 +24,8 @@ jobs:
         with:
           python-version: "3.13"
       - run: npm ci
+      - name: Generated pages are up to date
+        run: node scripts/generate.mjs --check
       - name: Links are up to date
         run: node scripts/link.mjs --check
       - name: Frontmatter, links and runnable code

@@ -3,6 +3,7 @@ title: Thread
 aliases: [threads, multithreading, multi-threaded, single-threaded, main thread]
 type: concept
 track: cs-fundamentals
+requires: [call-stack]
 description: A sequence of instructions the operating system can schedule. Threads in one process share memory; each has its own call stack.
 depth: solid
 sources:
@@ -12,6 +13,10 @@ sources:
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[call-stack|Call stack]]
+<!-- /read-first -->
 
 A thread is one line of execution inside a program. A **process** is a running program with its own memory; it has
 at least one thread, and can have many. Threads in the same process **share memory** (the heap, global variables)
@@ -53,3 +58,12 @@ print(round(time.time() - start, 1) < 0.5)   # True: the three waits overlapped
 
 > [!question]- Why don't Python threads speed up a CPU-heavy loop in standard CPython?
 > The GIL lets only one thread execute Python bytecode at a time. Use processes (multiprocessing) or the free-threaded build instead.
+
+<!-- leads-to -->
+## Leads to
+
+- [[2026-11-11-event-loop|#1 · The event loop]]: How JavaScript does many things at once with one thread, and why promise callbacks run before timers.
+- [[concurrency-vs-parallelism|Concurrency vs parallelism]]: Concurrency is dealing with many things in progress at once; parallelism is doing many things at the same instant.
+- [[gil|GIL (Global Interpreter Lock)]]: A lock in CPython that lets only one thread run Python bytecode at a time. Python 3.13 added an optional build without it.
+- [[web-worker|Web Worker]]: A real background thread for JavaScript in the browser. It has no DOM access and talks to the page by passing messages.
+<!-- /leads-to -->

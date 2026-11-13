@@ -3,6 +3,7 @@ title: Task queue
 aliases: [task queues, macrotask, macrotasks, macrotask queue, callback queue]
 type: concept
 track: javascript
+requires: [event-loop]
 description: Where callbacks for timers, events and I/O wait. The event loop runs one task per turn, then all microtasks.
 depth: solid
 sources:
@@ -10,6 +11,10 @@ sources:
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[event-loop|Event loop]]
+<!-- /read-first -->
 
 A task is a unit of work the [[event-loop|event loop]] runs from start to finish: a `setTimeout` callback, a click
 handler, a network or file callback, or the script itself. Tasks wait in task queues. People often call them
@@ -42,3 +47,9 @@ Promise.resolve().then(() => console.log('microtask'));
 
 > [!question]- Name three things that create tasks.
 > Timers (`setTimeout`, `setInterval`), user events like clicks, and I/O callbacks such as network or file responses.
+
+<!-- leads-to -->
+## Leads to
+
+- [[microtask-queue|Microtask queue]]: A high-priority queue for promise callbacks and await continuations. It is emptied completely after every task.
+<!-- /leads-to -->

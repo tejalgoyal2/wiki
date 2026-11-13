@@ -66,3 +66,11 @@ The heap is where objects live; frames on the stack only hold references to them
 
 > [!question]- Why does infinite recursion crash instead of running forever?
 > Each call adds a frame and none are removed, so the fixed-size stack fills up and the runtime raises an error.
+
+<!-- leads-to -->
+## Leads to
+
+- [[2026-11-11-event-loop|#1 · The event loop]]: How JavaScript does many things at once with one thread, and why promise callbacks run before timers.
+- [[event-loop|Event loop]]: The rule that decides when queued callbacks run in JavaScript - only when the call stack is empty, microtasks first.
+- [[thread|Thread]]: A sequence of instructions the operating system can schedule. Threads in one process share memory; each has its own call stack.
+<!-- /leads-to -->

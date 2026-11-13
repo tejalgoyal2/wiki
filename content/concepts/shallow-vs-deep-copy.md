@@ -3,6 +3,7 @@ title: Shallow vs deep copy
 aliases: [shallow copy, deep copy, deepcopy, structuredClone]
 type: concept
 track: python-data
+requires: [mutability]
 description: A shallow copy makes a new outer container that holds the same inner objects; a deep copy copies everything all the way down.
 depth: solid
 sources:
@@ -11,6 +12,10 @@ sources:
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[mutability|Mutability]]
+<!-- /read-first -->
 
 Copying a container that holds other [[mutability|mutable]] objects raises a question: copy just the outer box, or
 everything inside too?

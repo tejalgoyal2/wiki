@@ -3,6 +3,7 @@ title: Concurrency vs parallelism
 aliases: [concurrency, concurrent, parallelism, parallel execution]
 type: concept
 track: cs-fundamentals
+requires: [thread]
 description: Concurrency is dealing with many things in progress at once; parallelism is doing many things at the same instant.
 depth: solid
 sources:
@@ -10,6 +11,10 @@ sources:
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[thread|Thread]]
+<!-- /read-first -->
 
 **Concurrency** is about structure: several tasks are *in progress* during the same period, and they take turns.
 **Parallelism** is about execution: several tasks *run at the same instant*, on different CPU cores. Rob Pike's talk
@@ -40,3 +45,10 @@ Choosing the wrong one is a classic interview trap: adding threads to a CPU-heav
 
 > [!question]- Your program spends most of its time waiting for an API. Concurrency or parallelism?
 > Concurrency: overlap the waiting. More cores won't help code that is idle.
+
+<!-- leads-to -->
+## Leads to
+
+- [[event-loop|Event loop]]: The rule that decides when queued callbacks run in JavaScript - only when the call stack is empty, microtasks first.
+- [[gil|GIL (Global Interpreter Lock)]]: A lock in CPython that lets only one thread run Python bytecode at a time. Python 3.13 added an optional build without it.
+<!-- /leads-to -->

@@ -3,6 +3,7 @@ title: Web Worker
 aliases: [web workers, worker threads, worker_threads]
 type: concept
 track: javascript
+requires: [thread, event-loop]
 description: A real background thread for JavaScript in the browser. It has no DOM access and talks to the page by passing messages.
 depth: solid
 sources:
@@ -12,6 +13,10 @@ sources:
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[thread|Thread]] · [[event-loop|Event loop]]
+<!-- /read-first -->
 
 A Web Worker runs a JavaScript file on a **separate [[thread]]**, so heavy work doesn't freeze the page. It has its
 own [[event-loop|event loop]] and its own global scope.

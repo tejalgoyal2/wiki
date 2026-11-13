@@ -91,6 +91,9 @@ out = change(mine)
 print(mine, out)  # ?
 ```
 
+**See it:** [step through this code in Python Tutor](https://pythontutor.com/visualize.html#code=a%20%3D%20%5B1%2C%202%2C%203%5D%0Ab%20%3D%20a%0Ab.append%284%29%0Ac%20%3D%20%5B1%2C%202%2C%203%2C%204%5D%0Ax%20%3D%2010%0Ay%20%3D%20x%0Ay%20%2B%3D%201%0A%0Adef%20change%28lst%29%3A%0A%20%20%20%20lst.append%281%29%0A%20%20%20%20lst%20%3D%20%5B9%5D%0A%20%20%20%20return%20lst%0A%0Amine%20%3D%20%5B0%5D%0Aout%20%3D%20change%28mine%29%0A&cumulative=false&mode=display&py=3).
+It draws every name as an arrow to its object, so you can watch `a` and `b` point at the same list.
+
 > [!success]- Answer
 > ```
 > [1, 2, 3, 4]   # b and a are the same list

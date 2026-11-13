@@ -3,6 +3,7 @@ title: GIL (Global Interpreter Lock)
 aliases: [global interpreter lock, free-threaded]
 type: concept
 track: python-data
+requires: [thread, concurrency-vs-parallelism]
 description: A lock in CPython that lets only one thread run Python bytecode at a time. Python 3.13 added an optional build without it.
 depth: solid
 sources:
@@ -12,6 +13,10 @@ sources:
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[thread|Thread]] · [[concurrency-vs-parallelism|Concurrency vs parallelism]]
+<!-- /read-first -->
 
 The GIL is a single lock inside CPython (the standard Python). A [[thread]] must hold it to run Python bytecode, so
 in one process only **one thread executes Python code at a time**, even on a 16-core machine.

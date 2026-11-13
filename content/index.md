@@ -13,11 +13,23 @@ one list can change another. Today's puzzle: [[contains-duplicate|Contains Dupli
 
 Earlier: [[2026-11-11-event-loop|#1 · The event loop]]
 
+## Ways in
+
+| If you want to | Go to |
+|---|---|
+| Learn something new today | The newest lesson, above (20-30 minutes) |
+| Learn a topic from the ground up, in order | A path: [[how-javascript-runs-your-code\|How JavaScript runs your code]] |
+| Look up a term quickly | The [[glossary\|Glossary]]: every term in one line |
+| Test yourself before an interview | [[practice\|Practice]]: every question in the wiki, answers hidden |
+
+Every note says what to **read first** at the top, and what it **leads to** at the bottom, so you can always go one
+step back or one step forward.
+
 ## How to read it
 
-1. Start with the newest lesson. It takes 20-30 minutes.
-2. Follow the links you don't know yet. Every concept note stands on its own.
-3. Answer the **Check yourself** questions before you open them. Testing yourself is what makes it stick; rereading doesn't.
+1. Follow the links you don't know yet. Hover for a preview; every note stands on its own.
+2. Answer the **Check yourself** questions before you open them. Testing yourself is what makes it stick; rereading doesn't.
+3. Come back to [[practice|Practice]] a few days later. Spacing the reviews out is the other half of remembering.
 
 ## Tracks
 

@@ -3,6 +3,7 @@ title: "#1 · The event loop"
 type: lesson
 lesson: 1
 track: javascript
+requires: [call-stack, thread]
 description: How JavaScript does many things at once with one thread, and why promise callbacks run before timers.
 puzzle: two-sum
 market_word: Java
@@ -12,6 +13,10 @@ sources:
 created: 2026-11-11
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[call-stack|Call stack]] · [[thread|Thread]]
+<!-- /read-first -->
 
 > [!abstract] Today
 > How JavaScript does many things at once with only one [[thread|thread]]. About 25 minutes: the lesson, then the puzzle.

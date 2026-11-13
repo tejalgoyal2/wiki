@@ -8,6 +8,7 @@ Read it at **https://wiki.tgoyal.me**.
 
 - Notes are Markdown in `content/`, written to the rules in [SCHEMA.md](SCHEMA.md).
 - [Quartz 5](https://quartz.jzhao.xyz/) turns them into the site (links, backlinks, hover previews, search, graph).
+- `scripts/generate.mjs` writes the Read first / Leads to blocks, the Glossary and the Practice page.
 - `scripts/link.mjs` links the first mention of every note's name on every page.
 - `scripts/check.mjs` checks frontmatter and links, and runs every code block marked `run`.
 - `scripts/check-built.mjs` checks the built site for broken links.
@@ -17,6 +18,7 @@ Read it at **https://wiki.tgoyal.me**.
 
 ```bash
 npm ci
+node scripts/generate.mjs      # read-first / leads-to, glossary, practice
 node scripts/link.mjs          # add links
 node scripts/check.mjs         # check everything (needs node and python3)
 npx quartz build --serve       # preview at http://localhost:8080

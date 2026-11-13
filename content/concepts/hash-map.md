@@ -3,6 +3,7 @@ title: Hash map
 aliases: [hash maps, hash table, hash tables, hashmap, dictionary, dict]
 type: concept
 track: cs-fundamentals
+requires: [big-o-notation]
 description: A key-value store that finds any key in O(1) time on average by turning the key into an array position with a hash function.
 depth: solid
 sources:
@@ -11,6 +12,10 @@ sources:
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[big-o-notation|Big-O notation]]
+<!-- /read-first -->
 
 A hash map stores **key → value** pairs and finds a key without searching. It runs the key through a **hash
 function** to get a number, and uses that number to pick a slot in an array. Python's `dict` and `set`, JavaScript's
@@ -53,3 +58,9 @@ The [[hash-map-lookup|hash map lookup]] pattern solves [[two-sum|Two Sum]] and [
 
 > [!question]- Why can't a Python list be a dict key?
 > Lists are [[mutability|mutable]], so their hash could change after insertion and the key would be lost in the wrong slot. Python makes lists unhashable.
+
+<!-- leads-to -->
+## Leads to
+
+- [[hash-map-lookup|Hash map lookup (pattern)]]: Walk the input once and remember what you've seen in a hash map or set, so each "have I seen X?" question costs O(1).
+<!-- /leads-to -->

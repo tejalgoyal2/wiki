@@ -3,12 +3,17 @@ title: "HTML Standard: event loops"
 aliases: [HTML Standard, WHATWG HTML]
 type: reference
 track: javascript
+requires: [event-loop]
 description: The section of the HTML Standard (WHATWG) that defines how browsers run tasks, microtasks and rendering.
 sources:
   - https://html.spec.whatwg.org/multipage/webappapis.html#event-loops
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[event-loop|Event loop]]
+<!-- /read-first -->
 
 **What it is:** the official definition of the browser [[event-loop|event loop]], in the HTML Living Standard
 maintained by WHATWG. JavaScript itself (ECMAScript) only defines "jobs"; the browser side, meaning tasks,

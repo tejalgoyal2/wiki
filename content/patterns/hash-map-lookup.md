@@ -3,10 +3,15 @@ title: Hash map lookup (pattern)
 aliases: [complement lookup, seen set]
 type: pattern
 track: cs-fundamentals
+requires: [hash-map]
 description: Walk the input once and remember what you've seen in a hash map or set, so each "have I seen X?" question costs O(1).
 created: 2026-11-12
 updated: 2026-11-12
 ---
+<!-- read-first -->
+> [!info] Read first
+> [[hash-map|Hash map]]
+<!-- /read-first -->
 
 **When to use it:** the brute force compares every pair ([[big-o-notation|O(n²)]]), and the question for each item is
 "have I already seen a value that fits with this one?".
