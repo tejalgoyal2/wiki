@@ -4,7 +4,7 @@ description: A growing, linked wiki of software, data and ML. One deep lesson a 
 ---
 
 <!-- stats -->
-**The wiki today:** 2 lessons · 16 concepts · 2 puzzles · 108 links between notes · 44 practice questions
+**The wiki today:** 3 lessons · 21 concepts · 3 puzzles · 145 links between notes · 62 practice questions
 <!-- /stats -->
 
 A wiki that grows by one lesson a day. Each lesson teaches one idea properly, and every term in it links to its own
@@ -12,17 +12,18 @@ note, so reading one page leads to the next. Hover over a link to preview it.
 
 ## Today
 
-**[[2026-11-12-python-object-model|#2 · Python's object model]]**: what a Python variable really is, and why changing
-one list can change another. Today's puzzle: [[contains-duplicate|Contains Duplicate]].
+**[[2026-11-13-overfitting|#3 · Overfitting and the bias-variance trade-off]]**: why a model that is perfect on its
+training data can be useless, and how train, validation and test splits catch it. Today's puzzle:
+[[valid-anagram|Valid Anagram]].
 
-Earlier: [[2026-11-11-event-loop|#1 · The event loop]]
+Earlier: [[2026-11-12-python-object-model|#2 · Python's object model]] · [[2026-11-11-event-loop|#1 · The event loop]]
 
 ## Ways in
 
 | If you want to | Go to |
 |---|---|
 | Learn something new today | The newest lesson, above (20-30 minutes) |
-| Learn a topic from the ground up, in order | A path: [[how-javascript-runs-your-code\|How JavaScript runs your code]] |
+| Learn a topic from the ground up, in order | A path: [[how-javascript-runs-your-code\|How JavaScript runs your code]] or [[models-you-can-trust\|Models you can trust]] |
 | Look up a term quickly | The [[glossary\|Glossary]]: every term in one line |
 | Test yourself before an interview | [[practice\|Practice]]: every question in the wiki, answers hidden |
 | Remember it for good | The **[Quiz](/static/quiz/)**: the same questions as flashcards, spaced so each comes back just before you'd forget it |

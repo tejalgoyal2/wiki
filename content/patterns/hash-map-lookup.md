@@ -36,7 +36,7 @@ Cost: O(n) time, O(n) extra space. You trade memory for speed.
 | [[two-sum\|Two Sum]] | value → index | `target - x` |
 | [[contains-duplicate\|Contains Duplicate]] | values (a set) | `x` itself |
 | Subarray Sum Equals K | running sum → count | `running - k` |
-| Valid Anagram | letter → count | (compare counts) |
+| [[valid-anagram\|Valid Anagram]] | letter → count | (compare counts) |
 
 ## Traps
 

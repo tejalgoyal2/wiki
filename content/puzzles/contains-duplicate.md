@@ -31,4 +31,43 @@ as positions in a fixed-size array. ([on LeetCode](https://leetcode.com/problems
 
 ## Solution
 
-Arrives on the next lesson day. Think first.
+> [!success]- Open only after you have thought about it
+> **Key idea:** walk the list once and keep a set of the values already passed. The moment the current value is
+> already in the set, you have found a duplicate.
+>
+> **Pattern:** [[hash-map-lookup|hash map lookup]], in its simplest form: a "seen set" that only answers yes or no.
+>
+> **Why brute force is too slow:** comparing every pair is about n²/2 comparisons, roughly 5 billion for 100,000
+> numbers. Sorting first and comparing neighbours works in [[big-o-notation|O(n log n)]], but it changes the input or needs a copy.
+>
+> **Steps:**
+>
+> 1. Make an empty set `seen`.
+> 2. For each value `x`: if `x` is in `seen`, return `True`.
+> 3. Otherwise add `x` to `seen` and keep going.
+> 4. If the loop ends, every value was different: return `False`.
+>
+> ```py run
+> def contains_duplicate(nums):
+>     seen = set()
+>     for x in nums:
+>         if x in seen:          # seen it before: that's a duplicate
+>             return True
+>         seen.add(x)
+>     return False
+>
+> print(contains_duplicate([4, 1, 7, 1]))      # True
+> print(contains_duplicate([4, 1, 7]))         # False
+> print(contains_duplicate([]))                # False
+> print(contains_duplicate([-10**9, 10**9, -10**9]))  # True
+>
+> # The one-liner works too, but always builds the whole set before answering
+> print(len(set([4, 1, 7, 1])) != 4)           # True
+> ```
+>
+> **Time:** O(n) on average, since each set lookup and insert is O(1) on average, and the loop stops at the first
+> duplicate. **Space:** O(n) for the set in the worst case (no duplicates).
+>
+> **Where else this shows up:** finding the first repeated character in a string, detecting a cycle by remembering
+> visited nodes, de-duplicating events by ID in a data pipeline, and the "have I seen this window?" check in sliding
+> window problems.

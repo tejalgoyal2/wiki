@@ -6,7 +6,7 @@ nolink: true
 ---
 
 Every **Check yourself** and **How interviews ask it** question in the wiki, in one place. Say the answer out loud
-or write it down **before** opening it: testing yourself is what makes knowledge stick. 44 questions so far. This page is generated from
+or write it down **before** opening it: testing yourself is what makes knowledge stick. 62 questions so far. This page is generated from
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
@@ -83,6 +83,14 @@ the notes, so it grows every day.
 
 > [!question]- Why can a page stay responsive while it waits for a network request?
 > The request is handled by the browser outside the JavaScript thread. The thread is free until the response's callback is queued and run.
+
+> [!question]- A microtask queues another microtask. Does the new one run before the next `setTimeout` callback?
+> Yes. The microtask queue is emptied completely, including microtasks added while it is being emptied, before the
+> loop takes the next task.
+
+> [!question]- Inside an `fs.readFile` callback in Node.js, you call `setTimeout(fn, 0)` and `setImmediate(fn)`. Which runs first?
+> `setImmediate`. The callback runs in the poll phase, and the check phase, where `setImmediate` callbacks run, comes
+> right after it. Timers only run when the loop next reaches the timers phase.
 
 ### From [[microtask-queue|Microtask queue]]
 
@@ -184,6 +192,91 @@ the notes, so it grows every day.
 
 > [!question]- What is the modern built-in way to deep-copy in JavaScript?
 > `structuredClone(value)`.
+
+## ML & Data Science
+
+### From [[2026-11-13-overfitting|#3 · Overfitting and the bias-variance trade-off]]
+
+> [!question]- "Your model gets 99% on training data and 70% on test data. What is going on and what do you do?"
+> That gap is overfitting: the model fits noise in the training data that does not carry over. First I would rule out
+> a split problem, such as test rows that come from a different period or population than the training rows. Then I would reduce
+> variance: a simpler model or fewer features, regularisation (L1/L2, dropout, early stopping, shallower trees), or
+> more training data. I would compare options with cross-validation on the training data, and only look at the test
+> set again at the very end.
+
+> [!question]- "Why do you need a validation set if you already have a test set?"
+> Because choosing a model is itself fitting. If I try many settings and keep the one that scores best on a held-out
+> set, that score is biased upward: some of it is luck that suits that particular set. The validation set absorbs
+> those choices. The test set is used once, after all decisions are made, so its score is an honest estimate of
+> performance on new data.
+
+> [!question]- "Your churn model had an AUC of 0.97 offline and is close to random in production. Where do you look?"
+> Leakage first. I would look for features that are only known after the outcome, such as status fields updated when
+> the customer leaves, and check feature importance for a single column that dominates. I would check that the split
+> respected time, that the same customer did not appear in both training and test data, and that scaling or encoding
+> was fitted on training rows only. Then I would compare the production feature values with the training ones, since
+> a pipeline that computes a feature differently online is another common cause.
+
+> [!question]- A model's training error keeps falling as you make it more flexible. What usually happens to its validation error, and why?
+> It falls at first, then rises. More flexibility lowers bias, but past some point the model starts fitting the noise
+> in the training data, so its variance grows faster than its bias shrinks. The best setting is where validation
+> error is lowest, not training error.
+
+> [!question]- You standardise every column using the mean and standard deviation of the whole dataset, then split. What is wrong?
+> The test rows helped compute the mean and standard deviation, so information from the test set entered training.
+> Fit the scaler on the training rows only and apply that same fitted scaler to the validation and test rows.
+
+> [!question]- You have three years of sales data and want to predict next month. How should you split it?
+> By time, not at random: train on the earliest data, validate on the months after it, and test on the most recent
+> months. A random split lets the model learn from the future, which it cannot do in production.
+
+### From [[bias-variance-trade-off|Bias-variance trade-off]]
+
+> [!question]- Why does a random forest usually beat a single deep decision tree?
+> A deep tree has low bias but high variance. Averaging many trees, each trained on a different bootstrap sample,
+> cancels much of that variance while keeping the low bias.
+
+> [!question]- Adding more training data helps which part of the error, and which part never changes?
+> More data mainly lowers variance. The irreducible noise in the labels never changes, whatever the model or data size.
+
+### From [[cross-validation|Cross-validation]]
+
+> [!question]- Why report the spread of the k scores and not only the mean?
+> The spread shows how much the estimate depends on which rows were held out. Two models whose means differ by less
+> than that spread may not really be different.
+
+> [!question]- Your data has 20 rows per customer. Which kind of cross-validation do you use, and why?
+> Group k-fold by customer. Otherwise the same customer appears in training and validation folds, and the model can
+> score well by recognising customers instead of learning the pattern.
+
+### From [[data-leakage|Data leakage]]
+
+> [!question]- You fill missing ages with the mean age of the whole dataset, then split. Is that leakage?
+> Yes, a mild one: the test rows helped compute the mean. Compute the mean on the training rows and use that same
+> value to fill the validation and test rows.
+
+> [!question]- A loan-default model uses "number of collection calls". Why is that suspicious?
+> Collection calls happen after a borrower misses payments, which is part of defaulting. At the moment of deciding
+> on a loan, the value does not exist yet, so the model is learning from the outcome.
+
+### From [[overfitting|Overfitting]]
+
+> [!question]- Training accuracy 99%, validation accuracy 72%. Name three things you could try.
+> Get more training data, use a simpler model or fewer features, and add regularisation (an L2 penalty, dropout,
+> a depth limit or early stopping). Compare them with validation or cross-validation, not training accuracy.
+
+> [!question]- What does underfitting look like in the numbers?
+> Training and validation error are both high and close together. The model cannot even fit the data it learned
+> from, so it needs more flexibility or better features.
+
+### From [[train-validation-test-split|Train, validation and test split]]
+
+> [!question]- Why is the validation score of your best model usually a little too optimistic?
+> Because you picked that model for having the best validation score. Some of its advantage is luck that suits those
+> specific validation rows, and that luck will not repeat on new data. The untouched test set gives the honest number.
+
+> [!question]- You have a year of daily data. Should you shuffle before splitting?
+> No. Split by time so the model is trained on earlier days and evaluated on later ones, which is how it will be used.
 
 ## Backend & System Design
 

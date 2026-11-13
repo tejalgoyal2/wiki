@@ -119,6 +119,28 @@
    }
   },
   {
+   "id": "cv1med",
+   "track": "javascript",
+   "kind": "check",
+   "q": "A microtask queues another microtask. Does the new one run before the next `setTimeout` callback?",
+   "a": "Yes. The microtask queue is emptied completely, including microtasks added while it is being emptied, before the\nloop takes the next task.",
+   "from": {
+    "title": "Event loop",
+    "url": "/concepts/event-loop"
+   }
+  },
+  {
+   "id": "1s2l9y7",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Inside an `fs.readFile` callback in Node.js, you call `setTimeout(fn, 0)` and `setImmediate(fn)`. Which runs first?",
+   "a": "`setImmediate`. The callback runs in the poll phase, and the check phase, where `setImmediate` callbacks run, comes\nright after it. Timers only run when the loop next reaches the timers phase.",
+   "from": {
+    "title": "Event loop",
+    "url": "/concepts/event-loop"
+   }
+  },
+  {
    "id": "1vzl7qd",
    "track": "javascript",
    "kind": "check",
@@ -336,6 +358,182 @@
    "from": {
     "title": "Shallow vs deep copy",
     "url": "/concepts/shallow-vs-deep-copy"
+   }
+  },
+  {
+   "id": "hiozk2",
+   "track": "ml",
+   "kind": "interview",
+   "q": "Your model gets 99% on training data and 70% on test data. What is going on and what do you do?",
+   "a": "That gap is overfitting: the model fits noise in the training data that does not carry over. First I would rule out\na split problem, such as test rows that come from a different period or population than the training rows. Then I would reduce\nvariance: a simpler model or fewer features, regularisation (L1/L2, dropout, early stopping, shallower trees), or\nmore training data. I would compare options with cross-validation on the training data, and only look at the test\nset again at the very end.",
+   "from": {
+    "title": "#3 · Overfitting and the bias-variance trade-off",
+    "url": "/lessons/2026-11-13-overfitting"
+   }
+  },
+  {
+   "id": "8zksr1",
+   "track": "ml",
+   "kind": "interview",
+   "q": "Why do you need a validation set if you already have a test set?",
+   "a": "Because choosing a model is itself fitting. If I try many settings and keep the one that scores best on a held-out\nset, that score is biased upward: some of it is luck that suits that particular set. The validation set absorbs\nthose choices. The test set is used once, after all decisions are made, so its score is an honest estimate of\nperformance on new data.",
+   "from": {
+    "title": "#3 · Overfitting and the bias-variance trade-off",
+    "url": "/lessons/2026-11-13-overfitting"
+   }
+  },
+  {
+   "id": "q1czug",
+   "track": "ml",
+   "kind": "interview",
+   "q": "Your churn model had an AUC of 0.97 offline and is close to random in production. Where do you look?",
+   "a": "Leakage first. I would look for features that are only known after the outcome, such as status fields updated when\nthe customer leaves, and check feature importance for a single column that dominates. I would check that the split\nrespected time, that the same customer did not appear in both training and test data, and that scaling or encoding\nwas fitted on training rows only. Then I would compare the production feature values with the training ones, since\na pipeline that computes a feature differently online is another common cause.",
+   "from": {
+    "title": "#3 · Overfitting and the bias-variance trade-off",
+    "url": "/lessons/2026-11-13-overfitting"
+   }
+  },
+  {
+   "id": "uqn26a",
+   "track": "ml",
+   "kind": "check",
+   "q": "A model's training error keeps falling as you make it more flexible. What usually happens to its validation error, and why?",
+   "a": "It falls at first, then rises. More flexibility lowers bias, but past some point the model starts fitting the noise\nin the training data, so its variance grows faster than its bias shrinks. The best setting is where validation\nerror is lowest, not training error.",
+   "from": {
+    "title": "#3 · Overfitting and the bias-variance trade-off",
+    "url": "/lessons/2026-11-13-overfitting"
+   }
+  },
+  {
+   "id": "1wp1jsk",
+   "track": "ml",
+   "kind": "check",
+   "q": "You standardise every column using the mean and standard deviation of the whole dataset, then split. What is wrong?",
+   "a": "The test rows helped compute the mean and standard deviation, so information from the test set entered training.\nFit the scaler on the training rows only and apply that same fitted scaler to the validation and test rows.",
+   "from": {
+    "title": "#3 · Overfitting and the bias-variance trade-off",
+    "url": "/lessons/2026-11-13-overfitting"
+   }
+  },
+  {
+   "id": "3p1am7",
+   "track": "ml",
+   "kind": "check",
+   "q": "You have three years of sales data and want to predict next month. How should you split it?",
+   "a": "By time, not at random: train on the earliest data, validate on the months after it, and test on the most recent\nmonths. A random split lets the model learn from the future, which it cannot do in production.",
+   "from": {
+    "title": "#3 · Overfitting and the bias-variance trade-off",
+    "url": "/lessons/2026-11-13-overfitting"
+   }
+  },
+  {
+   "id": "1iovn8q",
+   "track": "ml",
+   "kind": "check",
+   "q": "Why does a random forest usually beat a single deep decision tree?",
+   "a": "A deep tree has low bias but high variance. Averaging many trees, each trained on a different bootstrap sample,\ncancels much of that variance while keeping the low bias.",
+   "from": {
+    "title": "Bias-variance trade-off",
+    "url": "/concepts/bias-variance-trade-off"
+   }
+  },
+  {
+   "id": "10sm63m",
+   "track": "ml",
+   "kind": "check",
+   "q": "Adding more training data helps which part of the error, and which part never changes?",
+   "a": "More data mainly lowers variance. The irreducible noise in the labels never changes, whatever the model or data size.",
+   "from": {
+    "title": "Bias-variance trade-off",
+    "url": "/concepts/bias-variance-trade-off"
+   }
+  },
+  {
+   "id": "164e8n6",
+   "track": "ml",
+   "kind": "check",
+   "q": "Why report the spread of the k scores and not only the mean?",
+   "a": "The spread shows how much the estimate depends on which rows were held out. Two models whose means differ by less\nthan that spread may not really be different.",
+   "from": {
+    "title": "Cross-validation",
+    "url": "/concepts/cross-validation"
+   }
+  },
+  {
+   "id": "po3fjf",
+   "track": "ml",
+   "kind": "check",
+   "q": "Your data has 20 rows per customer. Which kind of cross-validation do you use, and why?",
+   "a": "Group k-fold by customer. Otherwise the same customer appears in training and validation folds, and the model can\nscore well by recognising customers instead of learning the pattern.",
+   "from": {
+    "title": "Cross-validation",
+    "url": "/concepts/cross-validation"
+   }
+  },
+  {
+   "id": "1ro8gsp",
+   "track": "ml",
+   "kind": "check",
+   "q": "You fill missing ages with the mean age of the whole dataset, then split. Is that leakage?",
+   "a": "Yes, a mild one: the test rows helped compute the mean. Compute the mean on the training rows and use that same\nvalue to fill the validation and test rows.",
+   "from": {
+    "title": "Data leakage",
+    "url": "/concepts/data-leakage"
+   }
+  },
+  {
+   "id": "q061iw",
+   "track": "ml",
+   "kind": "check",
+   "q": "A loan-default model uses \"number of collection calls\". Why is that suspicious?",
+   "a": "Collection calls happen after a borrower misses payments, which is part of defaulting. At the moment of deciding\non a loan, the value does not exist yet, so the model is learning from the outcome.",
+   "from": {
+    "title": "Data leakage",
+    "url": "/concepts/data-leakage"
+   }
+  },
+  {
+   "id": "328tt7",
+   "track": "ml",
+   "kind": "check",
+   "q": "Training accuracy 99%, validation accuracy 72%. Name three things you could try.",
+   "a": "Get more training data, use a simpler model or fewer features, and add regularisation (an L2 penalty, dropout,\na depth limit or early stopping). Compare them with validation or cross-validation, not training accuracy.",
+   "from": {
+    "title": "Overfitting",
+    "url": "/concepts/overfitting"
+   }
+  },
+  {
+   "id": "1dykbj9",
+   "track": "ml",
+   "kind": "check",
+   "q": "What does underfitting look like in the numbers?",
+   "a": "Training and validation error are both high and close together. The model cannot even fit the data it learned\nfrom, so it needs more flexibility or better features.",
+   "from": {
+    "title": "Overfitting",
+    "url": "/concepts/overfitting"
+   }
+  },
+  {
+   "id": "113loeo",
+   "track": "ml",
+   "kind": "check",
+   "q": "Why is the validation score of your best model usually a little too optimistic?",
+   "a": "Because you picked that model for having the best validation score. Some of its advantage is luck that suits those\nspecific validation rows, and that luck will not repeat on new data. The untouched test set gives the honest number.",
+   "from": {
+    "title": "Train, validation and test split",
+    "url": "/concepts/train-validation-test-split"
+   }
+  },
+  {
+   "id": "uvvejz",
+   "track": "ml",
+   "kind": "check",
+   "q": "You have a year of daily data. Should you shuffle before splitting?",
+   "a": "No. Split by time so the model is trained on earlier days and evaluated on later ones, which is how it will be used.",
+   "from": {
+    "title": "Train, validation and test split",
+    "url": "/concepts/train-validation-test-split"
    }
   },
   {

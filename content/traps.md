@@ -44,9 +44,30 @@ the main thread. A promise changes **when the result is delivered**, not where t
 
 ### [[event-loop|Event loop]]
 
-- `setTimeout(fn, 0)` is a minimum delay, not "now".
-- Endless microtasks starve rendering; endless tasks do not.
-- Heavy synchronous code blocks everything. Move it to a [[web-worker|Web Worker]] or split it into chunks.
+- **`setTimeout(fn, 0)` is a minimum delay, not "now".** The callback waits for the current task and every microtask,
+  and it waits longer if the thread is busy:
+
+  ```js run
+  const start = Date.now();
+  setTimeout(() => console.log('waited at least 50 ms:', Date.now() - start >= 50), 0);
+  while (Date.now() - start < 50) {}   // block the thread for 50 ms
+  console.log('loop finished');
+  // loop finished
+  // waited at least 50 ms: true
+  ```
+
+  Browsers also clamp nested timers: after several levels of nesting, the minimum delay becomes 4 ms.
+- **Endless microtasks starve rendering; endless tasks do not.** A promise chain that keeps adding microtasks never
+  lets the loop reach the render step, so the page freezes. A chain of `setTimeout` calls is fine, because the browser
+  can paint between tasks. In Node.js, recursive `process.nextTick` starves I/O in the same way.
+- **Heavy synchronous code blocks everything,** including clicks, rendering and other timers. Move it to a
+  [[web-worker|Web Worker]], or split it into chunks that each run as a separate task.
+- **`nextTick` vs promise order depends on module type in Node.js.** In a CommonJS file, top-level `process.nextTick`
+  runs before a top-level `.then`. In an ES module (`.mjs`), the module itself is evaluated asynchronously, so the
+  promise microtask can run first. Inside callbacks, `nextTick` is always first. Do not write code whose correctness
+  depends on this.
+- **A `for` loop of `await`s runs one at a time.** Each `await` hands control back to the loop and waits. To run
+  independent requests together, start them all first and `await Promise.all(...)`.
 
 ### [[microtask-queue|Microtask queue]]
 
@@ -128,6 +149,122 @@ member if everything inside it is hashable, so `([1], 2)` cannot be a key.
 - A shallow copy of a flat list of numbers or strings is enough: those are immutable.
 - `JSON.parse(JSON.stringify(x))` as a deep copy loses dates, `undefined`, `Map`, `Set` and functions. Prefer `structuredClone`.
 - Deep copies cost time and memory. Copy only what you will change.
+
+## ML & Data Science
+
+### [[2026-11-13-overfitting|#3 · Overfitting and the bias-variance trade-off]]
+
+Most real failures are not overfitting in the textbook sense. They are data leakage: information from outside the
+training data, or from the future, gets into training, so the held-out score is too good. The model then fails in
+production, where that information is not there. Kaufman and colleagues, in a 2012 paper, describe it as using
+information that would not legitimately be available when the model makes real predictions. Four forms come up again
+and again.
+
+**1. Preprocessing on all the data before splitting.** Scaling, filling in missing values, or selecting features
+using the full dataset lets the test rows shape the model. The effect can be huge. Below, the labels are coin flips
+and every feature is random noise, so no honest model can beat 50%.
+
+```py run
+import random
+
+random.seed(1)
+n_rows, n_features = 60, 2000
+# pure noise: the labels are coin flips and no feature has anything to do with them
+X = [[random.gauss(0, 1) for _ in range(n_features)] for _ in range(n_rows)]
+y = [random.randint(0, 1) for _ in range(n_rows)]
+
+def top_features(rows, labels, k=10):
+    # score each feature by the gap between its mean in class 1 and in class 0
+    def gap(j):
+        a = [r[j] for r, l in zip(rows, labels) if l == 1]
+        b = [r[j] for r, l in zip(rows, labels) if l == 0]
+        return abs(sum(a) / len(a) - sum(b) / len(b))
+    return sorted(range(len(rows[0])), key=gap, reverse=True)[:k]
+
+def nearest_centroid_accuracy(train, test, feats):
+    def centroid(c):
+        rows = [r for r, l in train if l == c]
+        return [sum(r[j] for r in rows) / len(rows) for j in feats]
+    cents = {c: centroid(c) for c in (0, 1)}
+    def dist(r, c):
+        return sum((r[j] - m) ** 2 for j, m in zip(feats, cents[c]))
+    hits = sum(min((0, 1), key=lambda c: dist(r, c)) == l for r, l in test)
+    return hits / len(test)
+
+data = list(zip(X, y))
+train, test = data[:40], data[40:]
+
+leaky = top_features(X, y)                                            # features chosen using ALL rows
+honest = top_features([r for r, _ in train], [l for _, l in train])  # features chosen using train rows only
+print("leaky :", nearest_centroid_accuracy(train, test, leaky))   # leaky : 0.85
+print("honest:", nearest_centroid_accuracy(train, test, honest))  # honest: 0.4
+```
+
+With 2,000 noise features, some happen to line up with the 20 test labels by chance. Choosing features while looking
+at those labels finds them, and the test score jumps to 85% on pure noise. The fix: fit every preprocessing step on
+the training rows only, then apply it to the others. In scikit-learn, put the steps in a `Pipeline` so
+cross-validation refits them inside every fold (see scikit-learn's
+[common pitfalls](https://scikit-learn.org/stable/common_pitfalls.html) page).
+
+**2. Features that are only known after the answer.** Predicting whether a customer will cancel, with a column
+"days since last support call about cancelling". Predicting a diagnosis with a column for the treatment given. These
+are called target leakage: the feature is a consequence of the label. Ask of every column: at the moment the model
+makes this prediction in real life, would this value exist yet?
+
+**3. A random split on time-ordered data.** If you shuffle a year of daily sales and split randomly, the model trains
+on December and is tested on November. In production it will never see the future. Split by time: train on the past,
+validate on what came after (scikit-learn's `TimeSeriesSplit` does this for cross-validation).
+
+**4. The same entity on both sides.** Several X-rays from one patient, several rows per user, near-duplicate
+images. If the patient is in both training and test sets, the model can recognise the patient instead of the disease.
+Split by group, so all rows of one patient land on one side (`GroupKFold`).
+
+**And the quiet one: tuning on the test set.** Every time you look at the test score and change something, some of
+the test set leaks into your choices. Use validation for decisions; use test once.
+
+### [[bias-variance-trade-off|Bias-variance trade-off]]
+
+- **"Bias" here is not fairness bias.** It means systematic error of the model family, not discrimination against
+  a group. Interviews sometimes test whether you mix them up.
+- **Very large models do not always follow the U.** Heavily over-parameterised networks can see test error fall
+  again past the point where they fit training data perfectly ("double descent"). The classic U is still the right
+  first answer, and the right way to choose is still validation error.
+
+### [[cross-validation|Cross-validation]]
+
+- **Preprocessing outside the folds leaks.** Scaling or selecting features on all the training data, then
+  cross-validating, lets each validation fold shape its own preprocessing. Put the steps in a `Pipeline` so they are
+  refitted inside every fold. See [[data-leakage|data leakage]].
+- **Tuning and reporting on the same folds is optimistic.** If you also need an honest score from cross-validation
+  alone, use nested cross-validation: an inner loop to tune, an outer loop to score.
+- **It costs k times the training.** For large models or datasets, a single validation split is often good enough.
+
+### [[data-leakage|Data leakage]]
+
+- **One feature dominates the importance chart.** That is often a leak, not a breakthrough. Look at what it records
+  and when it is filled in.
+- **IDs and timestamps can leak.** A patient ID or a row number can correlate with the label if data was collected or
+  sorted by outcome.
+- **The serving pipeline computes features differently.** If training used a field cleaned after the fact, and
+  production sees the raw value, it is the same problem from the other side.
+
+### [[overfitting|Overfitting]]
+
+- **A big gap is not always overfitting.** If test data comes from a different time or population than the training
+  data, the gap can be distribution shift. Check the split before adding regularisation.
+- **A suspiciously good validation score is not a good fit.** It is more often [[data-leakage|data leakage]].
+- **Choosing among many models can overfit the validation set.** That is why the final number comes from a test set
+  you did not use for choices.
+
+### [[train-validation-test-split|Train, validation and test split]]
+
+- **Shuffling time-ordered data.** If rows have dates, split by date: train on the past, test on the future.
+- **Related rows on both sides.** Several rows per user or patient must all land in the same split, or the model can
+  recognise the user instead of learning the pattern.
+- **Imbalanced classes.** With 2% positives, a random 15% split might hold very few. Use a stratified split, which
+  keeps the class ratio the same in every group.
+- **Fitting preprocessing before splitting.** That is [[data-leakage|data leakage]]: scalers, encoders and feature
+  selection must be fitted on the training set only.
 
 ## CS Fundamentals
 

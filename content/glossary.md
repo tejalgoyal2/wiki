@@ -27,6 +27,16 @@ This page is generated from the notes themselves, so it is always complete.
 | [[mutability\|Mutability]] | Whether an object can be changed after it is created. It decides what other names pointing at the same object will see. |
 | [[shallow-vs-deep-copy\|Shallow vs deep copy]] | A shallow copy makes a new outer container that holds the same inner objects; a deep copy copies everything all the way down. |
 
+## ML & Data Science
+
+| Term | In one line |
+|---|---|
+| [[bias-variance-trade-off\|Bias-variance trade-off]] | A model's error on new data comes from bias (too rigid), variance (too sensitive to its sample) and noise; making it more flexible trades one for the other. |
+| [[cross-validation\|Cross-validation]] | Estimating how well a model generalises by training it k times, each time holding out a different part of the training data, and averaging the scores. |
+| [[data-leakage\|Data leakage]] | When information the model will not have at prediction time gets into training, so offline scores look better than real-world performance. |
+| [[overfitting\|Overfitting]] | When a model learns the noise in its training data along with the real pattern, so it scores well in training and worse on new data. |
+| [[train-validation-test-split\|Train, validation and test split]] | Cutting labelled data into three groups - one to fit the model, one to choose between models, one to measure the final choice honestly. |
+
 ## Backend & System Design
 
 | Term | In one line |
