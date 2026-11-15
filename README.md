@@ -1,45 +1,25 @@
 # wiki.tgoyal.me
 
-A public, growing, linked wiki of software, data and ML. One deep lesson a day; every term links to its own note.
+A learning wiki where every term opens its own note. Search a term, read it in plain words, follow any term
+inside it, and keep going. One new lesson a day.
 
-Read it at **https://wiki.tgoyal.me**.
+## How it fits together
 
-## How it is built
+| Part | Where | What it does |
+|---|---|---|
+| Notes | `content/` | Markdown with frontmatter. Rules in [SCHEMA.md](SCHEMA.md) |
+| Site | `src/` (Astro) | Renders notes, builds the search index, the map and the side trail |
+| Checks | `scripts/` | Links terms, generates Glossary / Practice / Traps / quiz cards, runs every code block marked `run` |
+| Wanted | `functions/api/`, `schema.sql` | Counts searches that found nothing; a small open model on Cloudflare Workers AI writes a labelled draft |
+| Daily writer | the `daily-drop` Claude skill | Writes the lesson, its puzzle and new notes (most wanted terms first), then checks and deploys |
 
-- Notes are Markdown in `content/`, written to the rules in [SCHEMA.md](SCHEMA.md).
-- [Quartz 5](https://quartz.jzhao.xyz/) turns them into the site (links, backlinks, hover previews, search, graph).
-- `scripts/generate.mjs` writes the Read first / Leads to blocks, the Glossary, Practice and Traps pages, the Quiz deck and the home-page stats.
-- `scripts/market.mjs` writes the job-market page from lockin's public gap report.
-- `quartz/static/quiz/` is the Quiz: flashcards with FSRS spaced repetition, progress kept in the browser.
-- `scripts/link.mjs` links the first mention of every note's name on every page.
-- `scripts/check.mjs` checks frontmatter and links, and runs every code block marked `run`.
-- `scripts/check-built.mjs` checks the built site for broken links.
-- Cloudflare Pages builds and publishes `main`; a failing check stops the deploy.
-
-## Working on it
+## Commands
 
 ```bash
-npm ci
-node scripts/generate.mjs      # read-first / leads-to, glossary, practice
-node scripts/link.mjs          # add links
-node scripts/check.mjs         # check everything (needs node and python3)
-npx quartz build --serve       # preview at http://localhost:8080
+npm run dev                  # local site at localhost:4321
+npm run check                # generated files, links, frontmatter, runnable code
+sh scripts/deploy.sh         # check, build, publish to wiki.tgoyal.me
+sh scripts/deploy.sh preview # publish to a preview address only
 ```
 
-The `content/` folder is also an Obsidian vault: open it in Obsidian to read or edit with the same links.
-
-**Deploying:** `sh scripts/deploy.sh` runs every check, builds, and publishes with wrangler (needs `npx wrangler login`
-once). The Cloudflare Git integration should also build each push to `main`, but its webhook has not been firing.
-
-**Cloudflare Pages build command** (for the Git integration):
-
-```bash
-node scripts/link.mjs --check && node scripts/check.mjs && npx quartz plugin install && npx quartz build && node scripts/check-built.mjs public
-```
-
-Output directory `public`, environment variable `NODE_VERSION=22`.
-
-## Licenses
-
-- Text in `content/`: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Reuse it with credit.
-- Code (Quartz and `scripts/`): MIT, see [LICENSE.txt](LICENSE.txt). Quartz is by jackyzha0 and contributors.
+Text is CC BY 4.0. Code is MIT.

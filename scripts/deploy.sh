@@ -2,7 +2,8 @@
 # Check, build and publish the wiki to Cloudflare Pages (project "wiki") with wrangler.
 # Needs `npx wrangler login` once on this machine. Refuses to deploy uncommitted or failing work.
 #
-#   sh scripts/deploy.sh
+#   sh scripts/deploy.sh            publish to wiki.tgoyal.me
+#   sh scripts/deploy.sh preview    publish to a preview address only
 set -e
 cd "$(dirname "$0")/.."
 
@@ -14,8 +15,8 @@ fi
 node scripts/generate.mjs --check
 node scripts/link.mjs --check
 node scripts/check.mjs
-npx quartz build
-node scripts/check-built.mjs public
+npm run build
+node scripts/check-built.mjs dist
 
-npx -y wrangler@4 pages deploy public --project-name wiki --branch main \
+npx -y wrangler@4 pages deploy dist --project-name wiki --branch "${1:-main}" \
   --commit-hash "$(git rev-parse HEAD)" --commit-message "$(git log -1 --format=%s)"

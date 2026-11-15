@@ -1,0 +1,90 @@
+---
+import { ClientRouter } from "astro:transitions"
+import "@fontsource-variable/literata"
+import "@fontsource-variable/literata/wght-italic.css"
+import "@fontsource-variable/geist"
+import "@fontsource-variable/geist-mono"
+import "../styles/global.css"
+
+interface Props {
+  title?: string
+  description?: string
+  slug?: string
+  home?: boolean
+}
+const { title, description = "A wiki where every term opens its own note. Search anything, keep digging.", slug, home } = Astro.props
+const full = title ? `${title} · wiki` : "wiki · search a term, keep digging"
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{full}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={full} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL("/og-image.png", Astro.site)} />
+    <link rel="icon" href="/icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="Lessons" href="/rss.xml" />
+    <script is:inline>
+      // Before first paint: the reader's theme choice, else the system's.
+      try {
+        const t = localStorage.getItem("wiki:theme")
+        if (t) document.documentElement.dataset.theme = JSON.parse(t)
+      } catch {}
+    </script>
+    <ClientRouter />
+  </head>
+  <body data-slug={slug} data-title={title} class:list={{ home }}>
+    <header class="top">
+      <a class="mark" href="/" aria-label="wiki home"><i></i>wiki</a>
+      {
+        !home && (
+          <button class="search-open" type="button" data-open-search>
+            <span>Search a term</span>
+            <kbd>/</kbd>
+          </button>
+        )
+      }
+      <button class="theme" type="button" data-theme-toggle aria-label="Switch between light and dark">
+        <i></i>
+      </button>
+    </header>
+
+    <slot />
+
+    <footer class="foot">
+      <nav>
+        <a href="/glossary/">Glossary</a>
+        <a href="/practice/">Practice</a>
+        <a href="/quiz/" data-astro-reload>Quiz</a>
+        <a href="/traps/">Traps</a>
+        <a href="/wanted/">Wanted</a>
+        <a href="/about/">About</a>
+        <a href="/rss.xml" data-astro-reload>RSS</a>
+      </nav>
+      <p>Written from primary sources, with code that is run before it is published. Text CC BY 4.0.</p>
+    </footer>
+
+    <dialog id="palette" aria-label="Search">
+      <div class="q">
+        <input type="search" placeholder="Search a term" autocomplete="off" spellcheck="false" aria-label="Search a term" />
+        <ul class="results" role="listbox"></ul>
+      </div>
+    </dialog>
+
+    <aside id="peek" aria-label="Side trail">
+      <header>
+        <nav class="crumbs" aria-label="Your trail"></nav>
+        <button type="button" data-peek-close aria-label="Close">esc</button>
+      </header>
+      <div class="peek-body prose"></div>
+    </aside>
+
+    <script>
+      import "../scripts/app.ts"
+    </script>
+  </body>
+</html>

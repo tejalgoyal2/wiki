@@ -1,0 +1,2 @@
+/static/quiz/* /quiz/:splat 301
+/index.xml /rss.xml 301

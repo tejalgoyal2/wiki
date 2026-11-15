@@ -1,6 +1,6 @@
 name: check
 
-# Runs on every push and pull request: the same checks Cloudflare runs before it publishes.
+# Runs on every push and pull request: the same checks scripts/deploy.sh runs before it publishes.
 on:
   push:
   pull_request:
@@ -31,6 +31,6 @@ jobs:
       - name: Frontmatter, links and runnable code
         run: node scripts/check.mjs
       - name: Build
-        run: npx quartz plugin install && npx quartz build
+        run: npm run build
       - name: No broken links in the built site
-        run: node scripts/check-built.mjs public
+        run: node scripts/check-built.mjs dist

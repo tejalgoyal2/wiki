@@ -114,7 +114,7 @@ or write it down **before** opening it: testing yourself is what makes knowledge
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
-> **[Open the Quiz](/static/quiz/)**: the same questions as cards, scheduled with spaced repetition so each one comes
+> **[Open the Quiz](/quiz/)**: the same questions as cards, scheduled with spaced repetition so each one comes
 > back just before you would forget it. Your progress stays in your browser.
 `
 // URL of a note, for links outside Quartz (the quiz app)
@@ -159,9 +159,9 @@ for (const [key, name] of TRACKS) {
 practice = practice.replace("This page is generated", `${count} questions so far. This page is generated`)
 write(join(CONTENT, "practice.md"), practice, "practice.md")
 
-// 4. Quiz data for /static/quiz/
-const QUIZ = new URL("../quartz/static/quiz/", import.meta.url).pathname
-write(join(QUIZ, "cards.json"), JSON.stringify({ tracks: Object.fromEntries(TRACKS), cards }, null, 1) + "\n", "quartz/static/quiz/cards.json")
+// 4. Quiz data for /quiz/
+const QUIZ = new URL("../public/quiz/", import.meta.url).pathname
+write(join(QUIZ, "cards.json"), JSON.stringify({ tracks: Object.fromEntries(TRACKS), cards }, null, 1) + "\n", "public/quiz/cards.json")
 
 // 5. Common traps: every "## Traps" section in one page
 function section(body, heading) {

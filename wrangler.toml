@@ -1,0 +1,12 @@
+# Cloudflare Pages project "wiki" (wiki.tgoyal.me). Static site in dist/, small API in functions/.
+name = "wiki"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-11-01"
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wiki"
+database_id = "f1c26436-7fec-4d01-87b3-2fac0519de5d"

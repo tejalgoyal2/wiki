@@ -10,7 +10,7 @@ or write it down **before** opening it: testing yourself is what makes knowledge
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
-> **[Open the Quiz](/static/quiz/)**: the same questions as cards, scheduled with spaced repetition so each one comes
+> **[Open the Quiz](/quiz/)**: the same questions as cards, scheduled with spaced repetition so each one comes
 > back just before you would forget it. Your progress stays in your browser.
 
 ## JavaScript

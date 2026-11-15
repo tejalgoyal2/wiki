@@ -46,8 +46,11 @@ Never edit these by hand; `scripts/generate.mjs` rewrites them:
 - `content/glossary.md` (every concept and pattern with its `description`, so descriptions must stand alone);
 - `content/practice.md` (every `> [!question]` callout under **Check yourself** and **How interviews ask it**).
 - `content/traps.md` (every `## Traps` section);
-- `quartz/static/quiz/cards.json` (the same questions as flashcards for the Quiz at `/static/quiz/`);
-- the `<!-- stats -->` line on the home page.
+- `public/quiz/cards.json` (the same questions as flashcards for the Quiz at `/quiz/`).
+
+The site itself (Astro, `src/`) builds the home page, the search index and each note's Read first, Leads to,
+Mentioned in and Sources from the notes. The `read-first` and `leads-to` blocks in the markdown are kept for reading
+in Obsidian or on GitHub; the site ignores them and draws its own.
 
 `scripts/market.mjs` writes `content/market.md` from lockin's public gap report. It needs the network, so it runs in
 the daily job, not in CI.
@@ -58,6 +61,9 @@ Order of the scripts: `generate.mjs`, then `link.mjs`, then `check.mjs`.
 
 - Write plain text. `scripts/link.mjs` turns the first mention of every note title or alias on a page into a link.
   Link by hand only when the wording differs (`[[thread|the main thread]]`).
+- A `[[term]]` with no note behind it is allowed. The site shows it as **wanted**: a click gives a short machine draft
+  and counts the request, and the most wanted terms are written first. Use it for terms that deserve a note soon;
+  `scripts/check.mjs` lists them so a typo is noticed.
 - Aliases must be specific enough not to match ordinary English. "promise" is fine in this wiki; "set" is not.
 - Never link inside code, headings or callout titles. The linker already skips them.
 

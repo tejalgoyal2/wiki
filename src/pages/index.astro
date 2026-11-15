@@ -1,0 +1,90 @@
+---
+import Base from "../layouts/Base.astro"
+import { notes, lessons, ofType, find, edges, wanted, day } from "../lib/wiki"
+
+const today = lessons[0]
+const puzzle = today?.data.puzzle && find(today.data.puzzle)
+const real = notes.filter((n) => n.type !== "page")
+const recent = real
+  .filter((n) => n.type !== "lesson" && n.type !== "puzzle")
+  .sort((a, b) => String(b.data.updated).localeCompare(String(a.data.updated)))
+  .slice(0, 8)
+const starters = ofType("concept").sort((a, b) => b.leadsTo.length + b.mentionedIn.length - (a.leadsTo.length + a.mentionedIn.length)).slice(0, 4)
+---
+
+<Base home>
+  <main class="home">
+    <canvas id="sky" aria-hidden="true"></canvas>
+
+    <section class="hero">
+      <div class="q" id="hero-q">
+        <input
+          type="search"
+          placeholder="What do you want to understand?"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Search a term"
+        />
+        <ul class="results" role="listbox"></ul>
+      </div>
+      <p class="try">
+        Start anywhere:
+        {starters.map((n) => <a href={n.url} data-slug={n.slug}>{n.title.toLowerCase()}</a>)}
+      </p>
+      <p class="count" data-you data-total={real.length}>
+        {real.length} notes · {edges().length} links · {wanted.size} terms waiting to be written
+      </p>
+    </section>
+
+    <section class="below">
+      {
+        today && (
+          <a class="today" href={today.url}>
+            <span class="kicker">
+              <span>Today's read</span>
+              <span>{today.minutes} min</span>
+              <span>{day(today.data.created)}</span>
+            </span>
+            <strong>{today.title}</strong>
+            <span class="sub">{today.lead}</span>
+            {puzzle && <span class="sub puzzle">Puzzle to think over: {puzzle.title}</span>}
+          </a>
+        )
+      }
+
+      <div class="cols">
+        <div>
+          <h2>Paths</h2>
+          <ul class="links">
+            {ofType("path").map((p) => (
+              <li>
+                <a href={p.url} data-slug={p.slug}>{p.title}</a>
+                <span>{p.lead}</span>
+              </li>
+            ))}
+          </ul>
+          <h2>Earlier lessons</h2>
+          <ul class="links">
+            {lessons.slice(1, 7).map((l) => (
+              <li>
+                <a href={l.url} data-slug={l.slug}>{l.title}</a>
+                <span>{l.minutes} min</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h2>New and deepened</h2>
+          <ul class="links">
+            {recent.map((n) => (
+              <li>
+                <a href={n.url} data-slug={n.slug}>{n.title}</a>
+                <span>{n.lead}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+</Base>

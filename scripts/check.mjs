@@ -1,6 +1,7 @@
 // Checks that must pass before the site is published:
 //   1. frontmatter: required fields, known type, right folder
-//   2. links: every [[wikilink]] leads to an existing note
+//   2. links: a [[wikilink]] to a note that does not exist yet is allowed (the site shows it as "wanted"),
+//      but it is reported, so a typo does not pass unnoticed
 //   3. code: every block marked "run" (```js run, ```py run) runs without error
 //
 //   node scripts/check.mjs            all checks
@@ -27,7 +28,7 @@ for (const n of notes) {
   if (!d.created || !d.updated) err(n, "missing created/updated")
   if (d.type === "lesson" && typeof d.lesson !== "number") err(n, "lesson needs a lesson number")
   if (d.type === "concept" && !d.sources?.length) err(n, "concept needs at least one source")
-  // An alias that turns into the note's own URL makes Quartz unable to resolve links to the note.
+  // The linker already links the file name, so an alias that repeats it is noise.
   for (const a of d.aliases ?? []) {
     if (String(a).toLowerCase().trim().replace(/\s+/g, "-") === n.slug.toLowerCase())
       err(n, `alias "${a}" repeats the file name; remove it (the linker already uses the file name)`)
@@ -36,6 +37,7 @@ for (const n of notes) {
 
 // 2. links
 const slugs = new Set(notes.map((n) => n.slug.toLowerCase()))
+const wanted = new Map()
 for (const n of notes) {
   let inFence = false
   for (const raw of n.body.split("\n")) {
@@ -44,7 +46,8 @@ for (const n of notes) {
     if (inFence) continue
     for (const m of line.replace(/`[^`]*`/g, "").matchAll(/\[\[([^\]|#\\]+)/g)) {
       const target = m[1].trim().toLowerCase()
-      if (!slugs.has(target)) err(n, `broken link [[${m[1]}]]`)
+      if (!/^[a-z0-9][a-z0-9 .+#-]*$/.test(target)) err(n, `odd link target [[${m[1]}]]`)
+      else if (!slugs.has(target)) wanted.set(target, [...(wanted.get(target) ?? []), n.rel])
     }
   }
 }
@@ -85,6 +88,10 @@ if (!process.argv.includes("--no-run")) {
   console.log(`code blocks run: ${ran}`)
 }
 
+if (wanted.size) {
+  console.log(`wanted (linked, not written yet): ${wanted.size}`)
+  for (const [t, from] of wanted) console.log(`  + ${t}  <- ${[...new Set(from)].join(", ")}`)
+}
 console.log(`notes: ${notes.length}, problems: ${errors.length}`)
 for (const e of errors) console.log("  - " + e)
 if (errors.length) process.exit(1)
