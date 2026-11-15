@@ -18,32 +18,30 @@ const host = (u: string) => {
 const puzzle = note.data.puzzle && find(note.data.puzzle)
 const at = lessons.indexOf(note)
 const [newer, older] = at >= 0 ? [lessons[at - 1], lessons[at + 1]] : []
-const meta = [kind(note), TRACKS[note.data.track], note.type === "lesson" && `${note.minutes} min`].filter(Boolean)
+const meta = [kind(note).toLowerCase(), TRACKS[note.data.track], !isPage && `${note.minutes} min read`].filter(Boolean)
 ---
 
 <Base title={note.title} description={note.lead} slug={isPage ? undefined : note.slug}>
   <main>
-    <article class="note" data-type={note.type}>
+    <article class="note hang" data-type={note.type}>
       <header class="note-head">
+        <h1 class:list={{ long: note.title.length > 26 }}>{note.title.replace(/^#\d+\s*·\s*/, "")}</h1>
         {
           meta.length > 0 && (
-            <p class="kicker">
+            <p class="meta">
               {meta.map((m) => (
                 <span>{m}</span>
               ))}
             </p>
           )
         }
-        <h1>{note.title}</h1>
         {note.lead && <p class="lead">{note.lead}</p>}
         {
           note.requires.length > 0 && (
             <nav class="before" aria-label="Read first">
-              <span>Read first</span>
+              <i>Read first</i>
               {note.requires.map((r) => (
-                <a class="chip" href={r.url} data-slug={r.slug}>
-                  {r.title}
-                </a>
+                <a href={r.url} data-slug={r.slug}>{r.title}</a>
               ))}
             </nav>
           )
@@ -91,7 +89,7 @@ const meta = [kind(note), TRACKS[note.data.track], note.type === "lesson" && `${
             {note.mentionedIn.length > 0 && (
               <section>
                 <h2>Mentioned in</h2>
-                <p class="inline-links">
+                <p class="inline">
                   {note.mentionedIn.map((n) => (
                     <a href={n.url} data-slug={n.slug}>{n.title}</a>
                   ))}

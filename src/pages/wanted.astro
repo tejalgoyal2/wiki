@@ -7,7 +7,7 @@ const edge = [...wanted].sort((a, b) => b[1].size - a[1].size)
 
 <Base title="Wanted" description="Terms people looked for that have no note yet. The most wanted get written first.">
   <main>
-    <article class="note">
+    <article class="note hang">
       <header class="note-head">
         <h1>Wanted</h1>
         <p class="lead">
@@ -16,13 +16,14 @@ const edge = [...wanted].sort((a, b) => b[1].size - a[1].size)
         </p>
       </header>
       <div class="prose">
+        <div data-draft-here></div>
         <h2>Asked for by readers</h2>
-        <p class="wanted-list" data-wanted-live>Loading…</p>
+        <p class="wall" data-wanted-live>Loading…</p>
         {
           edge.length > 0 && (
             <>
               <h2>Mentioned in notes, not written yet</h2>
-              <p class="wanted-list">
+              <p class="wall">
                 {edge.map(([term, from]) => (
                   <a class="term wanted" href={`/wanted/?q=${encodeURIComponent(term)}`} data-want={term}>
                     {term} <small>{from.size}</small>

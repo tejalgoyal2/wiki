@@ -1,10 +1,9 @@
 ---
 import { ClientRouter } from "astro:transitions"
-import "@fontsource-variable/literata"
-import "@fontsource-variable/literata/wght-italic.css"
+import "@fontsource-variable/newsreader/opsz.css"
+import "@fontsource-variable/newsreader/opsz-italic.css"
 import "@fontsource-variable/geist"
 import "@fontsource-variable/geist-mono"
-import "@fontsource-variable/bricolage-grotesque"
 import "../styles/global.css"
 import { lessons } from "../lib/wiki"
 
@@ -15,33 +14,28 @@ interface Props {
   home?: boolean
 }
 const { title, description = "A wiki where every term opens its own note. Search anything, keep digging.", slug, home } = Astro.props
-const full = title ? `${title} · Wiki` : "Wiki · search a term, keep digging"
+const full = title ? `${title} · Wiki` : "Wiki · a note for every term"
 
-// [name, label, background, accent] for the swatches in the options panel. The real colours live in global.css.
-const MOODS = [
-  ["paper", "Paper", "#faf9f6", "#0f7285"],
-  ["ink", "Ink", "#0d0f16", "#7fd4e4"],
-  ["dusk", "Dusk", "#2a1830", "#ffb38a"],
-  ["candy", "Candy", "#fdeef4", "#e0358f"],
-  ["mint", "Mint", "#ebf8f1", "#0c7a5c"],
-  ["terminal", "Terminal", "#07100a", "#5dfa8a"],
-]
 const KEYS = [
   ["/", "Search (also ⌘K)"],
-  ["r", "Surprise me: a random note"],
+  ["]  [", "Unfold the next or previous term on the page"],
+  ["esc", "Fold the last thing you unfolded"],
+  ["r", "A random note"],
   ["d", "Today's read"],
   ["h", "Home"],
   ["w", "Wanted terms"],
-  ["]  [", "Walk through the terms on this page"],
-  ["←", "Back one step in the side trail"],
-  ["o", "Open the note in the side trail"],
-  ["esc", "Close the side trail"],
   ["u", "Mark this note understood"],
-  ["a", "Open or close every answer"],
-  ["f", "Focus: hide everything but the text"],
-  ["t", "Next mood"],
+  ["a", "Reveal or hide every answer"],
+  ["f", "Focus: only the text"],
+  ["t", "Next paper"],
   [",", "Options"],
   ["?", "This list"],
+]
+const OPTIONS: [string, string, [string, string][]][] = [
+  ["Paper", "theme", [["auto", "Auto"], ["paper", "Paper"], ["sand", "Sand"], ["night", "Night"]]],
+  ["Reading face", "font", [["serif", "Serif"], ["sans", "Sans"]]],
+  ["Text size", "size", [["s", "Small"], ["m", "Medium"], ["l", "Large"]]],
+  ["Clicking a term", "open", [["unfold", "Unfolds it in place"], ["page", "Goes to its page"]]],
 ]
 ---
 
@@ -58,33 +52,35 @@ const KEYS = [
     <link rel="icon" href="/icon.png" />
     <link rel="alternate" type="application/rss+xml" title="Lessons" href="/rss.xml" />
     <script is:inline>
-      // Before first paint: the reader's mood, font and size. "auto" follows the system.
+      // Before first paint: the reader's paper, face and size. "auto" follows the system.
       try {
         const p = JSON.parse(localStorage.getItem("wiki:prefs")) || {}
         const r = document.documentElement
-        r.dataset.theme = p.theme && p.theme !== "auto" ? p.theme : matchMedia("(prefers-color-scheme: dark)").matches ? "ink" : "paper"
+        const ok = ["paper", "sand", "night"].includes(p.theme)
+        r.dataset.theme = ok ? p.theme : matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "paper"
         if (p.font) r.dataset.font = p.font
         if (p.size) r.dataset.size = p.size
       } catch {}
     </script>
     <ClientRouter />
   </head>
-  <body data-slug={slug} data-title={title} data-today={lessons[0]?.url} class:list={{ home }}>
-    <div class="progress" aria-hidden="true"></div>
+  <body data-slug={slug} data-title={title} data-today={lessons[0]?.url}>
+    {!home && <div class="progress" aria-hidden="true" />}
     <header class="top">
       <a class="mark" href="/" aria-label="Wiki home">
-        <i></i><b>Wiki</b><span data-tag>rabbit holes welcome</span>
+        <!-- ※ the reference mark: "see the note" -->
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5.5 5.5l13 13M18.5 5.5l-13 13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+          <circle cx="12" cy="4" r="1.8"></circle><circle cx="12" cy="20" r="1.8"></circle>
+          <circle cx="4" cy="12" r="1.8"></circle><circle cx="20" cy="12" r="1.8"></circle>
+        </svg>
+        <b>Wiki</b><span>a note for every term</span>
       </a>
-      {
-        !home && (
-          <button class="search-open" type="button" data-open-search>
-            <span>Search a term</span>
-            <kbd>/</kbd>
-          </button>
-        )
-      }
-      <button class="icon" type="button" data-open-keys aria-label="Keyboard shortcuts"><kbd>?</kbd></button>
-      <button class="icon theme" type="button" data-open-prefs aria-label="Options: mood, font, size"><i></i></button>
+      <nav class="tools">
+        {!home && <button type="button" data-open-search>Search <kbd>/</kbd></button>}
+        <button type="button" data-open-keys>Keys <kbd>?</kbd></button>
+        <button type="button" data-open-prefs>Options</button>
+      </nav>
     </header>
 
     <slot />
@@ -104,49 +100,32 @@ const KEYS = [
 
     <dialog id="palette" aria-label="Search">
       <div class="q">
-        <input type="search" placeholder="Search a term" autocomplete="off" spellcheck="false" aria-label="Search a term" />
+        <label for="pq">What do you want to understand?</label>
+        <div class="q-line">
+          <input id="pq" type="search" placeholder="a term" autocomplete="off" spellcheck="false" />
+        </div>
         <ul class="results" role="listbox"></ul>
       </div>
     </dialog>
 
     <dialog id="prefs" class="sheet" aria-label="Options">
       <div class="panel">
-        <h2>Make it yours</h2>
-        <p class="kicker">Mood</p>
-        <div class="opts moods">
-          <button type="button" data-pref="theme" data-value="auto"><i style="background:linear-gradient(135deg,#faf9f6 50%,#0d0f16 50%)"></i>Auto</button>
-          {
-            MOODS.map(([name, label, bg, accent]) => (
-              <button type="button" data-pref="theme" data-value={name}>
-                <i style={`background:linear-gradient(135deg,${bg} 50%,${accent} 50%)`} />
-                {label}
-              </button>
-            ))
-          }
-        </div>
-        <p class="kicker">Reading font</p>
-        <div class="opts">
-          <button type="button" data-pref="font" data-value="serif" style="font-family:var(--book)">Bookish</button>
-          <button type="button" data-pref="font" data-value="sans" style="font-family:var(--ui)">Clean</button>
-          <button type="button" data-pref="font" data-value="mono" style="font-family:var(--mono)">Hacker</button>
-        </div>
-        <p class="kicker">Text size</p>
-        <div class="opts">
-          <button type="button" data-pref="size" data-value="s">Small</button>
-          <button type="button" data-pref="size" data-value="m">Medium</button>
-          <button type="button" data-pref="size" data-value="l">Large</button>
-        </div>
-        <p class="kicker">Clicking a term</p>
-        <div class="opts">
-          <button type="button" data-pref="open" data-value="side">Opens beside the page</button>
-          <button type="button" data-pref="open" data-value="page">Goes to its page</button>
-        </div>
-        <p class="kicker">Map on the home page</p>
-        <div class="opts">
-          <button type="button" data-pref="motion" data-value="on">Drifting</button>
-          <button type="button" data-pref="motion" data-value="off">Still</button>
-        </div>
-        <p class="hint">Saved in this browser. Press <kbd>t</kbd> anywhere to flip through moods.</p>
+        <h2>Options</h2>
+        {
+          OPTIONS.map(([label, key, values]) => (
+            <>
+              <h3>{label}</h3>
+              <div class="opts">
+                {values.map(([value, name]) => (
+                  <button type="button" data-pref={key} data-value={value}>
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </>
+          ))
+        }
+        <p class="hint">Kept in this browser. <kbd>t</kbd> flips the paper from anywhere.</p>
       </div>
     </dialog>
 
@@ -165,15 +144,6 @@ const KEYS = [
         </dl>
       </div>
     </dialog>
-
-    <aside id="peek" aria-label="Side trail">
-      <header>
-        <nav class="crumbs" aria-label="Your trail"></nav>
-        <span class="depth" data-depth></span>
-        <button type="button" data-peek-close aria-label="Close">esc</button>
-      </header>
-      <div class="peek-body prose"></div>
-    </aside>
 
     <script>
       import "../scripts/app.ts"
