@@ -1,40 +1,37 @@
-// The map. Every note is a card with a fixed place; the camera pans, zooms and flies between them.
-// d3-zoom owns the camera (drag, pinch, and the zoom-out-then-in arc of a flight); everything else is plain DOM.
-import { select } from "d3-selection"
-import { zoom as d3zoom, zoomIdentity, type ZoomTransform } from "d3-zoom"
-import "d3-transition"
+// What the reader's browser does: search that answers while you type, hover previews, the dive between
+// notes, the trail of how deep you are, and remembering what you've opened. No framework.
+import { navigate } from "astro:transitions/client"
+import { emblem } from "../lib/emblem"
 
-type Node = {
-  s: string; u: string; t: string; a: string[]; d: string; k: string; c: number; m: number; g: number; x: number; y: number
-  el: HTMLElement; ghost?: boolean
-}
-type Hit = { node?: Node; want?: string; t: string; d: string; k: string; c: number }
+type Entry = { s: string; u: string; t: string; a: string[]; d: string; k: string; c: number; m: number }
+type Hit = { e?: Entry; want?: string }
+type Step = { s: string; t: string; u: string; c: number }
 
-const $ = <T extends HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel)!
+const $ = <T extends HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel)
 const $$ = <T extends HTMLElement>(sel: string, root: ParentNode = document) => [...root.querySelectorAll<T>(sel)]
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!)
 const norm = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^\p{L}\p{N}+#.]+/gu, " ").trim()
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches
+const face = (slug: string, c: number) => `<div class="face" style="--c:var(--c${c})">${emblem(slug)}</div>`
 
 const store = {
-  get<T>(key: string, fallback: T): T {
+  get<T>(key: string, fallback: T, where: Storage = localStorage): T {
     try {
-      return JSON.parse(localStorage.getItem("wiki:" + key)!) ?? fallback
+      return JSON.parse(where.getItem("wiki:" + key)!) ?? fallback
     } catch {
       return fallback
     }
   },
-  set(key: string, value: unknown) {
+  set(key: string, value: unknown, where: Storage = localStorage) {
     try {
-      localStorage.setItem("wiki:" + key, JSON.stringify(value))
+      where.setItem("wiki:" + key, JSON.stringify(value))
     } catch {}
   },
 }
 const prefs = () => ({ theme: "dark", sound: true, ...store.get<Record<string, any>>("prefs", {}) })
 const setPref = (key: string, value: unknown) => store.set("prefs", { ...prefs(), [key]: value })
 
-// ---------- sound: a few soft tones, made on the spot, no files ----------
+// ---------- sound: a few soft tones, made on the spot ----------
 
 let audio: AudioContext | null = null
 function tone(from: number, to: number, seconds: number, volume = 0.05) {
@@ -54,16 +51,16 @@ function tone(from: number, to: number, seconds: number, volume = 0.05) {
   } catch {}
 }
 const sound = {
-  land: () => tone(420, 760, 0.12),
-  fly: () => tone(170, 560, 0.55, 0.03),
-  leave: () => tone(620, 300, 0.14, 0.04),
+  dive: () => tone(520, 190, 0.42, 0.035),
+  rise: () => tone(200, 540, 0.36, 0.035),
   tick: () => tone(1100, 900, 0.03, 0.02),
+  open: () => tone(420, 760, 0.1, 0.04),
   win: () => [660, 880, 1320].forEach((f, i) => setTimeout(() => tone(f, f, 0.14), i * 95)),
 }
 
 let toastTimer = 0
 function toast(text: string) {
-  let t = document.getElementById("toast")
+  let t = $("#toast")
   if (!t) document.body.append((t = Object.assign(document.createElement("div"), { id: "toast" })))
   t.textContent = text
   void t.offsetWidth
@@ -72,7 +69,6 @@ function toast(text: string) {
   toastTimer = window.setTimeout(() => t!.classList.remove("on"), 2200)
 }
 
-// Little stars around something worth celebrating.
 function sparkles(around: Element) {
   if (calm()) return
   const box = around.getBoundingClientRect()
@@ -90,194 +86,279 @@ function sparkles(around: Element) {
   }
 }
 
-// ---------- the map ----------
+// ---------- the index of every note (also what search runs on) ----------
 
-const stage = $("#stage")
-const world = $("#world")
-const cards = $("#cards")
-const sel = select(stage)
-let nodes: Node[] = []
-let edges: [number, number][] = []
-let regions: { name: string; c: number; x: number; y: number; r: number }[] = []
-let today: Node | undefined
-let current: Node | null = null
-let trail: Node[] = []
-let view: ZoomTransform = zoomIdentity
-const bySlug = new Map<string, Node>()
+let index: Promise<Entry[]> | null = null
+const all = () => (index ??= fetch("/map.json").then((r) => r.json()).then((d) => d.nodes))
 
-const camera = d3zoom<HTMLElement, unknown>()
-  .scaleExtent([0.05, 1.6])
-  .filter((e: any) => {
-    if (e.type === "wheel") return e.ctrlKey // pinch (or ⌘/ctrl + wheel) zooms; a plain wheel pans, see below
-    if (e.type === "dblclick") return false
-    if (e.type === "mousedown") return !e.button && !e.target.closest(".card.open") // text in an open card stays selectable
-    return true
-  })
-  .on("zoom", (e) => {
-    view = e.transform
-    world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.k})`
-    world.style.setProperty("--k", String(view.k))
-    world.dataset.zoom = view.k < 0.42 ? "far" : "near"
-    stage.style.setProperty("--px", view.x + "px")
-    stage.style.setProperty("--py", view.y + "px")
-    if (e.sourceEvent) document.body.classList.add("touched")
-  })
-
-function go(to: ZoomTransform, ms = 1000) {
-  if (!ms || calm()) sel.interrupt().call(camera.transform, to)
-  else sel.interrupt().transition().duration(ms).call(camera.transform, to)
-}
-const whole = () => {
-  const real = nodes.filter((n) => !n.ghost)
-  const xs = real.map((n) => n.x), ys = real.map((n) => n.y)
-  const [x0, x1, y0, y1] = [Math.min(...xs) - 260, Math.max(...xs) + 260, Math.min(...ys) - 330, Math.max(...ys) + 220]
-  const k = Math.min(innerWidth / (x1 - x0), (innerHeight - 150) / (y1 - y0), 0.85)
-  return zoomIdentity.translate(innerWidth / 2 - ((x0 + x1) / 2) * k, innerHeight / 2 + 20 - ((y0 + y1) / 2) * k).scale(k)
-}
-const reading = (n: Node) => zoomIdentity.translate(innerWidth / 2 - n.x, 104 - n.y)
-const beside = (n: Node, k = 0.62) => zoomIdentity.translate(innerWidth / 2 - n.x * k, innerHeight * 0.36 - n.y * k).scale(k)
-
-const curve = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-  `M${a.x},${a.y} Q${(a.x + b.x) / 2 - (b.y - a.y) * 0.13},${(a.y + b.y) / 2 + (b.x - a.x) * 0.13} ${b.x},${b.y}`
-
-function makeCard(n: Node) {
-  const el = document.createElement("article")
-  el.className = "card" + (n.ghost ? " ghost" : "")
-  el.dataset.slug = n.s
-  el.style.cssText = `left:${n.x}px;top:${n.y}px;--c:var(--c${n.c})`
-  el.innerHTML =
-    `<header><span class="kind">${esc(n.k || "Page")}</span><span class="mins">${n.m} min</span>` +
-    `<h3>${esc(n.t)}</h3><p class="lead">${esc(n.d)}</p></header><div class="body"></div>`
-  n.el = el
-  cards.append(el)
-}
-
-function drawTrail() {
-  $("#trail").setAttribute("d", trail.slice(1).map((n, i) => curve(trail[i], n)).join(" "))
-}
-
-function where(n: Node | null) {
-  $("[data-where]").textContent = n ? (regions.find((r) => r.c === n.c)?.name ?? n.k ?? "the map") : "the map"
+function rank(q: string, list: Entry[]): Entry[] {
+  const score = (e: Entry) => {
+    let best = 0
+    ;[e.t, ...e.a].map(norm).forEach((name, i) => {
+      const own = i === 0 ? 5 : 0
+      if (name === q) best = Math.max(best, 100 + own)
+      else if (name.startsWith(q)) best = Math.max(best, 80 + own)
+      else if (name.split(" ").some((w) => w.startsWith(q))) best = Math.max(best, 60 + own)
+      else if (name.includes(q)) best = Math.max(best, 40 + own)
+    })
+    if (!best && q.length > 2 && norm(e.d).includes(q)) best = 10
+    return best
+  }
+  return list
+    .map((e) => [score(e), e] as const)
+    .filter(([s]) => s > 0)
+    .sort((a, b) => b[0] - a[0] || a[1].t.length - b[1].t.length)
+    .map(([, e]) => e)
 }
 
 // ---------- what you've opened and what you understand (kept in this browser only) ----------
 
-function decorate() {
+function decorate(root: ParentNode = document) {
   const seen = store.get<Record<string, number>>("seen", {})
   const known = store.get<Record<string, number>>("known", {})
-  for (const el of $$("[data-slug]")) {
-    const s = el.dataset.slug!
-    el.classList.toggle("known", !!known[s])
-    el.classList.toggle("seen", !!seen[s])
+  for (const el of $$("[data-slug]", root)) {
+    if (el === document.body) continue
+    el.classList.toggle("known", !!known[el.dataset.slug!])
+    el.classList.toggle("seen", !!seen[el.dataset.slug!])
   }
-  for (const btn of $$("[data-gotit]")) {
-    const on = !!known[btn.closest<HTMLElement>(".card")!.dataset.slug!]
-    btn.classList.toggle("on", on)
-    btn.textContent = on ? "✦ Understood" : "I understand this"
+  const slug = document.body.dataset.slug
+  const btn = $("[data-gotit]")
+  if (btn && slug) {
+    btn.classList.toggle("on", !!known[slug])
+    btn.textContent = known[slug] ? "✦ Understood" : "I understand this"
   }
+  const you = $("[data-you]")
+  const lit = $$(".tile.seen, .tile.known").length
+  if (you) you.textContent = lit ? `${lit} of ${you.dataset.total} lit · ${Object.keys(known).length} understood` : `${you.dataset.total} notes, all waiting to be lit`
 }
 function understood() {
-  if (!current || current.ghost) return
+  const slug = document.body.dataset.slug
+  const btn = $("[data-gotit]")
+  if (!slug || !btn) return
   const known = store.get<Record<string, number>>("known", {})
-  const btn = $("[data-gotit]", current.el)
-  if (known[current.s]) delete known[current.s]
+  if (known[slug]) delete known[slug]
   else {
-    known[current.s] = Date.now()
+    known[slug] = Date.now()
     sound.win()
-    if (btn) sparkles(btn)
+    sparkles(btn)
     toast(`${Object.keys(known).length} understood`)
   }
   store.set("known", known)
   decorate()
 }
 
-// ---------- flying in and out ----------
+// ---------- search: the answer shows while you type ----------
 
-async function open(n: Node, { push = true, instant = false } = {}) {
-  if (current === n) return
-  const from = current
-  if (from) fold(from)
-  current = n
-  n.el.classList.add("open")
-  world.classList.add("reading")
-  document.body.classList.add("reading")
-  if (!n.ghost) {
-    const back = trail.indexOf(n)
-    trail = back >= 0 ? trail.slice(0, back + 1) : [...trail, n]
-    drawTrail()
-    store.set("seen", { ...store.get("seen", {}), [n.s]: Date.now() })
-    if (push) history.pushState({ s: n.s }, "", n.u)
-    document.title = `${n.t} · Wiki`
-  }
-  where(n)
-  const far = from ? Math.hypot(n.x - from.x, n.y - from.y) : 0
-  go(reading(n), instant ? 0 : from ? clamp(600 + far * 0.32, 800, 1900) : 1000)
-  from ? sound.fly() : sound.land()
+const peeks = new Map<string, string>()
+function wireSearch() {
+  const dialog = $<HTMLDialogElement>("#palette")!
+  const input = $<HTMLInputElement>("input", dialog)!
+  const list = $(".results", dialog)!
+  const pane = $("[data-preview]", dialog)!
+  let items: Hit[] = []
+  let at = 0
 
-  const body = $(".body", n.el)
-  if (!body.innerHTML) {
-    body.innerHTML = `<p class="wait">Unpacking…</p>`
-    try {
-      body.innerHTML = n.ghost ? await draftHtml(n) : (await fetch(`/f/${n.s}.json`).then((r) => r.json())).html
-    } catch {
-      body.innerHTML = `<p class="wait">Couldn't load this one. Check your connection and try again.</p>`
+  const show = async () => {
+    const h = items[at]
+    if (!h) return (pane.innerHTML = "")
+    if (h.want) {
+      pane.innerHTML =
+        `<p class="label" style="--c:var(--pink)">Not written yet</p><h2>${esc(h.want)}</h2>` +
+        `<p class="lead">Press enter for a quick sketch from a small model. It is marked as unchecked, and your request puts the term on the list to be written properly.</p>`
+      return
+    }
+    const e = h.e!
+    const head = `${face(e.s, e.c).replace('class="face"', 'class="face live"')}<p class="label" style="--c:var(--c${e.c})"><span>${esc(e.k || "Page")}</span><span>${e.m} min</span></p><h2>${esc(e.t)}</h2><p class="lead">${esc(e.d)}</p>`
+    pane.innerHTML = head + (peeks.has(e.s) ? `<div class="prose">${peeks.get(e.s)}</div>` : "")
+    if (!peeks.has(e.s)) {
+      try {
+        peeks.set(e.s, (await fetch(`/f/${e.s}.json`).then((r) => r.json())).html)
+      } catch {
+        return
+      }
+      if (items[at]?.e === e) pane.innerHTML = head + `<div class="prose">${peeks.get(e.s)}</div>`
     }
   }
-  decorate()
-  diagrams()
-}
-
-function fold(n: Node) {
-  n.el.classList.remove("open")
-  if (n.ghost) {
-    n.el.remove()
-    nodes = nodes.filter((m) => m !== n)
+  const paint = () => {
+    list.innerHTML = items.length
+      ? items
+          .map((h, i) =>
+            h.e
+              ? `<li role="option" aria-selected="${i === at}" data-i="${i}" style="--c:var(--c${h.e.c})">${face(h.e.s, h.e.c)}<div><b>${esc(h.e.t)}</b><small>${esc(h.e.k || "Page")}</small></div></li>`
+              : `<li role="option" aria-selected="${i === at}" data-i="${i}" style="--c:var(--pink)"><div><b>“${esc(h.want!)}”</b><small>sketch it</small></div></li>`,
+          )
+          .join("")
+      : `<li class="hintrow">Type a term. The answer appears here as you type.</li>`
+    show()
+  }
+  const fill = async () => {
+    const typed = input.value.trim()
+    const q = norm(typed)
+    const list = await all()
+    if (norm(input.value) !== q) return
+    const found = q ? rank(q, list) : list.filter((e) => e.k).sort((a, b) => b.m - a.m).slice(0, 0)
+    items = found.slice(0, 7).map((e) => ({ e }))
+    const named = found.some((e) => [e.t, ...e.a].some((n) => norm(n).includes(q)))
+    if (q.length > 1 && !named) items.push({ want: typed })
+    at = 0
+    paint()
+  }
+  const pick = (h?: Hit) => {
+    if (!h) return
+    dialog.close()
+    if (h.e) navigate(h.e.u)
+    else sketch(h.want!)
+  }
+  input.oninput = fill
+  input.onkeydown = (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault()
+      at = (at + (e.key === "ArrowDown" ? 1 : items.length - 1)) % Math.max(items.length, 1)
+      sound.tick()
+      paint()
+      $(`li[data-i="${at}"]`, list)?.scrollIntoView({ block: "nearest" })
+    } else if (e.key === "Enter") pick(items[at])
+  }
+  list.onclick = (e) => pick(items[Number((e.target as Element).closest<HTMLElement>("li")?.dataset.i)])
+  list.onmousemove = (e) => {
+    const i = Number((e.target as Element).closest<HTMLElement>("li")?.dataset.i)
+    if (i >= 0 && i !== at) {
+      at = i
+      paint()
+    }
   }
 }
-
-function close({ push = true } = {}) {
-  if (!current) return go(whole(), 900)
-  const n = current
-  fold(n)
-  current = null
-  world.classList.remove("reading")
-  document.body.classList.remove("reading")
-  where(null)
-  go(n.ghost ? whole() : beside(n), 850)
-  sound.leave()
-  if (push) history.pushState({}, "", "/")
-  document.title = "Wiki"
+function openSearch(first = "") {
+  const dialog = $<HTMLDialogElement>("#palette")!
+  const input = $<HTMLInputElement>("input", dialog)!
+  if (!dialog.open) dialog.showModal()
+  input.value = first
+  input.dispatchEvent(new Event("input"))
+  input.focus()
+  sound.open()
 }
 
-// A term nobody has written yet: a ghost card appears beside you with a quick sketch from a small model.
-function sketch(term: string) {
-  const at = current ?? { x: (innerWidth / 2 - view.x) / view.k - 900, y: (innerHeight * 0.3 - view.y) / view.k }
-  const n = { s: "~" + term, u: "", t: term, a: [], d: "Not written yet. Sketching it now…", k: "Unchecked draft", c: -1, m: 1, g: 0, x: at.x + 900, y: at.y, ghost: true } as unknown as Node
-  nodes.push(n)
-  makeCard(n)
-  open(n)
-}
-async function draftHtml(n: Node) {
+// A term nobody has written yet: a quick sketch from a small model, clearly marked.
+async function sketch(term: string) {
+  const dialog = $<HTMLDialogElement>("#sketch")!
+  const panel = $(".panel", dialog)!
+  panel.innerHTML = `<p class="label">Unchecked sketch</p><h2>${esc(term)}</h2><p class="lead">Sketching it now…</p>`
+  if (!dialog.open) dialog.showModal()
+  const list = await all()
   const link = (name: string) => {
-    const hit = nodes.find((m) => !m.ghost && [m.t, ...m.a].some((x) => norm(x) === norm(name)))
-    return hit
-      ? `<a class="term" href="${hit.u}" data-slug="${hit.s}">${esc(name)}</a>`
-      : `<a class="term wanted" href="#" data-want="${esc(name)}">${esc(name)}</a>`
+    const e = list.find((e) => [e.t, ...e.a].some((n) => norm(n) === norm(name)))
+    return e ? `<a class="term" href="${e.u}" data-slug="${e.s}">${esc(name)}</a>` : `<a class="term wanted" href="#" data-want="${esc(name)}">${esc(name)}</a>`
   }
-  const r = await fetch(`/api/draft?term=${encodeURIComponent(n.t)}`).then((r) => r.json())
-  const lead = $(".lead", n.el)
-  if (r.status !== "draft") {
-    lead.textContent = r.status === "no" ? "That doesn't look like a term this wiki covers. If it is one, it has been noted." : "No note yet. It is on the list now, and the most wanted terms are written first."
-    return `<p class="draft-note">Nothing more to show here yet.</p>`
+  try {
+    const r = await fetch(`/api/draft?term=${encodeURIComponent(term)}`).then((r) => r.json())
+    if (r.status !== "draft") {
+      $(".lead", panel)!.textContent = r.status === "no" ? "That doesn't look like a term this wiki covers. If it is one, it has been noted." : "No note yet. It is on the list now, and the most wanted terms are written first."
+      return
+    }
+    panel.innerHTML =
+      `<p class="label">Unchecked sketch</p><h2>${esc(r.title)}</h2><p class="lead">${esc(r.one_line)}</p>` +
+      `<div class="prose">${String(r.body).split(/\n{2,}/).map((p) => `<p>${esc(p)}</p>`).join("")}` +
+      ((r.related ?? []).length ? `<p>Nearby: ${r.related.map(link).join(", ")}</p>` : "") +
+      `</div><p class="draft-note">A small open model wrote this a moment ago and nobody has checked it against sources. Your request is counted: the most wanted terms get a real note, written from primary sources, in the next daily run.</p>`
+    decorate(panel)
+  } catch {
+    $(".lead", panel)!.textContent = "Couldn't reach the sketcher. Check your connection and try again."
   }
-  $("h3", n.el).textContent = r.title
-  lead.textContent = r.one_line
-  return (
-    `<div class="prose">${String(r.body).split(/\n{2,}/).map((p) => `<p>${esc(p)}</p>`).join("")}` +
-    ((r.related ?? []).length ? `<p>Nearby: ${r.related.map(link).join(", ")}</p>` : "") +
-    `</div><p class="draft-note">A small open model sketched this a moment ago and nobody has checked it against sources. ` +
-    `Your request is counted: the most wanted terms get a real card on the map, written from primary sources, in the next daily run.</p>`
+}
+
+// ---------- hover a term: its meaning, without leaving the sentence ----------
+
+let tipTimer = 0
+function wireTips() {
+  if (!matchMedia("(hover: hover)").matches) return
+  let tip = $("#tip")
+  if (!tip) document.body.append((tip = Object.assign(document.createElement("div"), { id: "tip" })))
+  document.addEventListener("mouseover", (e) => {
+    const a = (e.target as Element).closest?.<HTMLAnchorElement>("article a.term[data-slug], .panel a.term[data-slug]")
+    clearTimeout(tipTimer)
+    if (!a) return tip!.classList.remove("on")
+    tipTimer = window.setTimeout(async () => {
+      const entry = (await all()).find((x) => x.s === a.dataset.slug)
+      if (!entry) return
+      tip!.style.setProperty("--c", `var(--c${entry.c})`)
+      tip!.innerHTML = `${face(entry.s, entry.c)}<div><span class="label">${esc(entry.k)}</span><b>${esc(entry.t)}</b><p>${esc(entry.d)}</p><small>Click to dive in · ${entry.m} min</small></div>`
+      const box = a.getBoundingClientRect()
+      const below = box.top < 220
+      tip!.style.left = Math.max(12, Math.min(innerWidth - 352, box.left + box.width / 2 - 170)) + scrollX + "px"
+      tip!.style.top = (below ? box.bottom + 10 : box.top - 10) + scrollY + "px"
+      tip!.style.translate = below ? "0 0" : "0 -100%"
+      tip!.classList.add("on")
+    }, 220)
+  })
+}
+
+// ---------- the dive: the word you click becomes the next page's title ----------
+
+let viaTerm = false
+let direction = "forward"
+const anchors = () => $$<HTMLAnchorElement>("main a[data-slug]")
+const morph = (el: HTMLElement) => ((el.querySelector<HTMLElement>("h3") ?? el).style.viewTransitionName = "dive")
+
+document.addEventListener("astro:before-preparation", (e: any) => {
+  direction = e.direction
+  const a = (e.sourceElement as Element | undefined)?.closest?.<HTMLAnchorElement>("main a[data-slug]")
+  viaTerm = !!a?.closest("article")
+  if (direction !== "forward") return sound.rise()
+  if (!a) return
+  const title = $("h1.title")
+  if (title) title.style.viewTransitionName = "none" // only one thing on a page may carry the name
+  morph(a)
+  store.set("dive:" + location.pathname, anchors().indexOf(a), sessionStorage) // so coming back can shrink into the same word
+  sound.dive()
+})
+
+document.addEventListener("astro:after-swap", () => {
+  if (prefs().theme === "light") document.documentElement.dataset.theme = "light"
+  if (direction !== "back") return
+  const from = anchors()[store.get("dive:" + location.pathname, -1, sessionStorage)]
+  if (!from) return
+  const title = $("h1.title")
+  if (title) title.style.viewTransitionName = "none"
+  morph(from)
+  setTimeout(() => {
+    ;(from.querySelector<HTMLElement>("h3") ?? from).style.viewTransitionName = ""
+    if (title) title.style.viewTransitionName = ""
+  }, 900)
+})
+
+// The trail: every term you dived through to get here.
+function trail() {
+  const body = document.body.dataset
+  let steps = store.get<Step[]>("trail", [], sessionStorage)
+  if (!body.slug) steps = []
+  else {
+    const here: Step = { s: body.slug, t: body.title!.replace(/^#\d+\s*·\s*/, ""), u: location.pathname, c: Number(body.c) }
+    const back = steps.findIndex((s) => s.s === here.s)
+    steps = back >= 0 ? steps.slice(0, back + 1) : viaTerm ? [...steps, here] : [here]
+  }
+  store.set("trail", steps, sessionStorage)
+  const el = $("[data-trail]")!
+  el.innerHTML =
+    steps.map((s, i) => (i ? `<i style="--hue:var(--c${s.c})"></i>` : "") + `<a href="${s.u}">${esc(s.t)}</a>`).join("") +
+    (steps.length > 2 ? `<small>${steps.length - 1} deep</small>` : "")
+  el.scrollLeft = 1e6
+  return steps
+}
+
+// ---------- small things ----------
+
+function contents() {
+  const toc = $("[data-toc]")
+  const heads = $$("article .prose > h2")
+  if (!toc || heads.length < 2) return
+  toc.innerHTML = `<b>On this page</b>` + heads.map((h) => `<a href="#${h.id}">${esc(h.textContent!)}</a>`).join("")
+  const watch = new IntersectionObserver(
+    (seen) => {
+      for (const s of seen) if (s.isIntersecting) $$("a", toc).forEach((a) => a.classList.toggle("here", a.hash === "#" + s.target.id))
+    },
+    { rootMargin: "-90px 0px -65% 0px" },
   )
+  heads.forEach((h) => watch.observe(h))
 }
 
 async function diagrams() {
@@ -289,182 +370,6 @@ async function diagrams() {
   await mermaid.run({ nodes: found })
 }
 
-// ---------- search: type, and the map answers ----------
-
-function rank(q: string): Node[] {
-  const score = (n: Node) => {
-    let best = 0
-    ;[n.t, ...n.a].map(norm).forEach((name, i) => {
-      const own = i === 0 ? 5 : 0
-      if (name === q) best = Math.max(best, 100 + own)
-      else if (name.startsWith(q)) best = Math.max(best, 80 + own)
-      else if (name.split(" ").some((w) => w.startsWith(q))) best = Math.max(best, 60 + own)
-      else if (name.includes(q)) best = Math.max(best, 40 + own)
-    })
-    if (!best && q.length > 2 && norm(n.d).includes(q)) best = 10
-    return best
-  }
-  return nodes
-    .filter((n) => !n.ghost)
-    .map((n) => [score(n), n] as const)
-    .filter(([s]) => s > 0)
-    .sort((a, b) => b[0] - a[0] || a[1].t.length - b[1].t.length)
-    .map(([, n]) => n)
-}
-
-function wireSearch() {
-  const input = $<HTMLInputElement>("#q input")
-  const list = $("#q .results")
-  let items: Hit[] = []
-  let at = 0
-  const paint = () => {
-    list.innerHTML = items
-      .map(
-        (h, i) =>
-          `<li role="option" aria-selected="${i === at}" data-i="${i}" style="--c:var(--c${h.c})">` +
-          `<div class="r1"><span>${esc(h.t)}</span><small>${esc(h.k)}</small></div><div class="r2">${esc(h.d)}</div></li>`,
-      )
-      .join("")
-    list.classList.toggle("on", items.length > 0)
-  }
-  const light = (found: Node[] | null) => {
-    world.classList.toggle("filtering", !!found)
-    for (const n of nodes) n.el.classList.toggle("hit", !!found?.includes(n))
-  }
-  const clear = () => {
-    input.value = ""
-    items = []
-    light(null)
-    paint()
-    input.blur()
-  }
-  const pick = (h?: Hit) => {
-    if (!h) return
-    clear()
-    h.node ? open(h.node) : sketch(h.want!)
-  }
-  input.addEventListener("input", () => {
-    const typed = input.value.trim()
-    const q = norm(typed)
-    if (!q) {
-      items = []
-      light(null)
-      return paint()
-    }
-    const found = rank(q)
-    light(found)
-    items = found.slice(0, 6).map((node) => ({ node, t: node.t, d: node.d, k: node.k || "Page", c: node.c }))
-    const named = found.some((n) => [n.t, ...n.a].some((x) => norm(x).includes(q)))
-    if (!named && q.length > 1) items.push({ want: typed, t: `Nothing on “${typed}” yet`, d: "Enter for a quick sketch. It also joins the list of notes to write.", k: "sketch", c: 2 })
-    at = 0
-    paint()
-  })
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault()
-      at = (at + (e.key === "ArrowDown" ? 1 : items.length - 1)) % Math.max(items.length, 1)
-      sound.tick()
-      paint()
-    } else if (e.key === "Enter") pick(items[at])
-    else if (e.key === "Escape") clear()
-  })
-  list.addEventListener("click", (e) => pick(items[Number((e.target as Element).closest<HTMLElement>("li")?.dataset.i)]))
-}
-
-// ---------- start ----------
-
-async function start() {
-  const data = await fetch("/map.json").then((r) => r.json())
-  regions = data.regions
-  edges = data.edges
-  nodes = data.nodes
-  for (const n of nodes) {
-    bySlug.set(n.s, n)
-    makeCard(n)
-  }
-  today = bySlug.get(data.today)
-  today?.el.classList.add("today")
-
-  $("#regions").innerHTML = regions
-    .map((r) => `<div class="region" style="left:${r.x}px;top:${r.y}px;--c:var(--c${r.c});--r:${r.r}"><i></i><b>${esc(r.name)}</b></div>`)
-    .join("")
-  const NS = "http://www.w3.org/2000/svg"
-  edges.forEach(([a, b], i) => {
-    const path = document.createElementNS(NS, "path")
-    path.setAttribute("class", "edge")
-    path.setAttribute("d", curve(nodes[a], nodes[b]))
-    path.setAttribute("style", `--c:var(--c${nodes[a].c})`)
-    path.dataset.i = String(i)
-    document.getElementById("edges")!.append(path)
-  })
-
-  sel.call(camera)
-  // A plain wheel (or two fingers on a trackpad) moves the map, which is also how you scroll a note you're reading.
-  stage.addEventListener("wheel", (e) => {
-    if (e.ctrlKey) return
-    e.preventDefault()
-    document.body.classList.add("touched")
-    sel.interrupt().call(camera.translateBy, -e.deltaX / view.k, -e.deltaY / view.k)
-  }, { passive: false })
-
-  if (today) {
-    const pill = $("[data-today]")
-    pill.textContent = `Today's read: ${today.t} · ${today.m} min`
-    pill.hidden = false
-  }
-  $("[data-sound]").classList.toggle("off", !prefs().sound)
-  wireSearch()
-  decorate()
-
-  // Arrive: straight at a note if the address names one, otherwise ease in over the whole map.
-  const focus = bySlug.get(document.body.dataset.focus ?? "")
-  const seed = document.getElementById("seed")
-  if (focus && seed) $(".body", focus.el).innerHTML = $(".body", seed).innerHTML
-  seed?.remove()
-  if (focus) open(focus, { push: false, instant: true })
-  else {
-    const all = whole()
-    go(zoomIdentity.translate(all.x + (innerWidth * 0.1) / 2, all.y + (innerHeight * 0.1) / 2).scale(all.k * 0.9), 0)
-    go(all, 1400)
-    if (document.body.dataset.lost) toast("Nothing at that address. Here's the whole map instead.")
-  }
-}
-
-// ---------- wiring ----------
-
-document.addEventListener("click", (e) => {
-  const el = e.target as Element
-  const link = el.closest<HTMLAnchorElement>("a[data-slug], a[data-want]")
-  if (link && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
-    e.preventDefault()
-    const to = bySlug.get(link.dataset.slug ?? "")
-    return to ? void open(to) : link.dataset.want ? sketch(link.dataset.want) : undefined
-  }
-  if (el.closest("[data-gotit]")) return understood()
-  const card = el.closest<HTMLElement>(".card:not(.open)")
-  if (card) return void open(nodes.find((n) => n.el === card)!)
-  if (el.closest("[data-home]")) return e.preventDefault(), current ? (close(), go(whole(), 1100)) : go(whole(), 900)
-  if (el.closest("[data-close]")) return close()
-  if (el.closest("[data-today]")) return today && void open(today)
-  if (el.closest("[data-fit]")) return current ? close() : go(whole(), 900)
-  const z = el.closest<HTMLElement>("[data-zoom]")
-  if (z) return void sel.transition().duration(260).call(camera.scaleBy, Number(z.dataset.zoom) > 0 ? 1.5 : 1 / 1.5)
-  if (el.closest("[data-theme-toggle]")) return theme()
-  if (el.closest("[data-sound]")) return mute()
-  if (el.closest("[data-open-keys]")) return $<HTMLDialogElement>("#keys").showModal()
-  if (el instanceof HTMLDialogElement) el.close()
-})
-
-// Hovering a card lights up the wires that leave it.
-cards.addEventListener("mouseover", (e) => {
-  const card = (e.target as Element).closest<HTMLElement>(".card")
-  const i = card ? nodes.findIndex((n) => n.el === card) : -1
-  for (const path of $$<any>(".edge")) {
-    const [a, b] = edges[Number(path.dataset.i)]
-    path.classList.toggle("on", i >= 0 && (a === i || b === i))
-  }
-})
-
 function theme() {
   const next = document.documentElement.dataset.theme === "light" ? "dark" : "light"
   document.documentElement.dataset.theme = next
@@ -473,58 +378,75 @@ function theme() {
 function mute() {
   const on = !prefs().sound
   setPref("sound", on)
-  $("[data-sound]").classList.toggle("off", !on)
-  if (on) sound.land()
+  $("[data-sound]")?.classList.toggle("off", !on)
+  if (on) sound.open()
   toast(on ? "Sound on" : "Sound off")
 }
-function onward() {
-  if (!current) return today && open(today)
-  const seen = store.get<Record<string, number>>("seen", {})
-  const next = $$<HTMLAnchorElement>("a[data-slug]", current.el).map((a) => bySlug.get(a.dataset.slug!)).find((n) => n && !seen[n.s])
-  next ? open(next) : toast("You've opened everything this note links to")
+async function random() {
+  const pool = (await all()).filter((e) => e.c >= 0 && e.s !== document.body.dataset.slug)
+  navigate(pool[Math.floor(Math.random() * pool.length)].u)
 }
+function onward() {
+  const seen = store.get<Record<string, number>>("seen", {})
+  const next = $$<HTMLAnchorElement>("article a[data-slug]").find((a) => !seen[a.dataset.slug!] && a.dataset.slug !== document.body.dataset.slug)
+  next ? next.click() : toast(document.body.dataset.slug ? "You've opened everything this note links to" : "Open a note first")
+}
+
+// ---------- wiring ----------
+
+document.addEventListener("click", (e) => {
+  const el = e.target as Element
+  const want = el.closest<HTMLElement>("a[data-want]")
+  if (want) return e.preventDefault(), void sketch(want.dataset.want!)
+  if (el.closest("#sketch a[data-slug]")) $<HTMLDialogElement>("#sketch")!.close()
+  if (el.closest("[data-open-search]")) return openSearch()
+  if (el.closest("[data-random]")) return void random()
+  if (el.closest("[data-gotit]")) return understood()
+  if (el.closest("[data-theme-toggle]")) return theme()
+  if (el.closest("[data-sound]")) return mute()
+  if (el.closest("[data-open-keys]")) return $<HTMLDialogElement>("#keys")!.showModal()
+  if (el instanceof HTMLDialogElement) el.close() // a click outside the panel
+})
 
 document.addEventListener("keydown", (e) => {
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target as Element).tagName)
-  if (e.key === "k" && (e.metaKey || e.ctrlKey)) return e.preventDefault(), $<HTMLInputElement>("#q input").focus()
-  if (typing || e.metaKey || e.ctrlKey || e.altKey || document.querySelector("dialog[open]")) return
-  const pan = (x: number, y: number) => sel.transition().duration(180).call(camera.translateBy, x / view.k, y / view.k)
+  if (e.key === "k" && (e.metaKey || e.ctrlKey)) return e.preventDefault(), openSearch()
+  if (typing || e.metaKey || e.ctrlKey || e.altKey || $("dialog[open]")) return
+  const up = () => (store.get<Step[]>("trail", [], sessionStorage).length > 1 ? history.back() : document.body.dataset.slug && navigate("/"))
   const keys: Record<string, () => unknown> = {
-    "/": () => $<HTMLInputElement>("#q input").focus(),
-    "?": () => $<HTMLDialogElement>("#keys").showModal(),
-    Escape: () => close(),
-    "0": () => (current ? (close(), go(whole(), 1100)) : go(whole(), 900)),
-    "=": () => sel.transition().duration(220).call(camera.scaleBy, 1.4),
-    "+": () => sel.transition().duration(220).call(camera.scaleBy, 1.4),
-    "-": () => sel.transition().duration(220).call(camera.scaleBy, 1 / 1.4),
-    ArrowLeft: () => pan(160, 0),
-    ArrowRight: () => pan(-160, 0),
-    ArrowUp: () => pan(0, 160),
-    ArrowDown: () => pan(0, -160),
+    "/": () => openSearch(),
+    "?": () => $<HTMLDialogElement>("#keys")!.showModal(),
     "]": onward,
-    "[": () => (trail.length > 1 ? open(trail.at(-2)!) : toast("This is where you started")),
-    r: () => {
-      const pool = nodes.filter((n) => !n.ghost && n.c >= 0 && n !== current)
-      open(pool[Math.floor(Math.random() * pool.length)])
-    },
-    d: () => today && open(today),
+    "[": up,
+    Escape: up,
+    r: random,
+    h: () => navigate("/"),
+    d: () => document.body.dataset.today && navigate(document.body.dataset.today),
     u: understood,
     a: () => {
-      const all = current ? $$<HTMLDetailsElement>("details.callout", current.el) : []
-      const on = !all.every((d) => d.open)
-      all.forEach((d) => (d.open = on))
+      const list = $$<HTMLDetailsElement>("article details.callout")
+      const on = !list.every((d) => d.open)
+      list.forEach((d) => (d.open = on))
     },
     m: mute,
     t: theme,
   }
-  if (!keys[e.key]) return
-  e.preventDefault()
-  keys[e.key]()
+  if (keys[e.key]) return e.preventDefault(), void keys[e.key]()
+  // On the home page, just start typing: the first letter opens search.
+  if (!document.body.dataset.slug && e.key.length === 1 && /[\p{L}\p{N}]/u.test(e.key)) {
+    e.preventDefault()
+    openSearch(e.key)
+  }
 })
 
-addEventListener("popstate", () => {
-  const n = nodes.find((n) => n.u === location.pathname)
-  n ? open(n, { push: false }) : current && close({ push: false })
+document.addEventListener("astro:page-load", () => {
+  const slug = document.body.dataset.slug
+  if (slug) store.set("seen", { ...store.get("seen", {}), [slug]: Date.now() })
+  trail()
+  decorate()
+  wireSearch()
+  contents()
+  diagrams()
+  $("[data-sound]")?.classList.toggle("off", !prefs().sound)
 })
-
-start()
+wireTips()

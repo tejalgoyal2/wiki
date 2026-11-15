@@ -1,0 +1,118 @@
+---
+// Every page: a quiet bar, then the content. The bar's middle shows the trail of terms you dived through.
+import { ClientRouter } from "astro:transitions"
+import "@fontsource-variable/figtree"
+import "@fontsource-variable/geist-mono"
+import "@fontsource-variable/bricolage-grotesque"
+import "../styles/global.css"
+import { lessons } from "../lib/wiki"
+import { emblem } from "../lib/emblem"
+
+interface Props {
+  title?: string
+  description?: string
+  slug?: string
+  c?: number // which track's colour this page wears (-1: none)
+}
+const { title, description = "Look up a term, read it in plain words, and dive into any word inside it.", slug, c = -1 } = Astro.props
+const full = title ? `${title} · Wiki` : "Wiki · look something up, then keep diving"
+
+const KEYS = [
+  ["/", "Search (also ⌘K)"],
+  ["]", "Dive into the next term you haven't opened"],
+  ["[  esc", "Come back up one level"],
+  ["r", "Somewhere random"],
+  ["d", "Today's read"],
+  ["h", "Home"],
+  ["u", "Mark this note understood"],
+  ["a", "Reveal or hide every answer"],
+  ["m", "Sound on or off"],
+  ["t", "Dark or light"],
+  ["?", "This list"],
+]
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark" transition:animate="none">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{full}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={full} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL("/og-image.png", Astro.site)} />
+    <link rel="icon" href="/icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="Lessons" href="/rss.xml" />
+    <script is:inline>
+      try {
+        const p = JSON.parse(localStorage.getItem("wiki:prefs")) || {}
+        if (p.theme === "light") document.documentElement.dataset.theme = "light"
+      } catch {}
+    </script>
+    <ClientRouter />
+  </head>
+  <body style={`--c:var(--c${c})`} data-slug={slug} data-title={title} data-c={c} data-today={lessons[0]?.url}>
+    <header class="bar">
+      <a class="mark" href="/" aria-label="Wiki home">
+        <Fragment set:html={emblem("wiki")} />
+        <b>Wiki</b>
+      </a>
+      <nav class="trail" data-trail aria-label="How you got here"></nav>
+      <button class="find" type="button" data-open-search><span>Search</span><kbd>/</kbd></button>
+      <nav class="tools">
+        <button type="button" data-sound aria-label="Sound on or off">♪</button>
+        <button type="button" data-theme-toggle aria-label="Dark or light">◐</button>
+        <button type="button" data-open-keys aria-label="Keyboard shortcuts">?</button>
+      </nav>
+    </header>
+
+    <slot />
+
+    <footer class="foot">
+      <nav>
+        <a href="/glossary/">Glossary</a>
+        <a href="/practice/">Practice</a>
+        <a href="/quiz/" data-astro-reload>Quiz</a>
+        <a href="/traps/">Traps</a>
+        <a href="/market/">Job market</a>
+        <a href="/about/">About</a>
+        <a href="/rss.xml" data-astro-reload>RSS</a>
+      </nav>
+      <p>Written from primary sources, with code that is run before it is published. Text CC BY 4.0.</p>
+    </footer>
+
+    <dialog id="palette" aria-label="Search">
+      <div class="pal">
+        <input type="search" placeholder="What do you want to understand?" autocomplete="off" spellcheck="false" aria-label="Search" />
+        <div class="pal-body">
+          <ul class="results" role="listbox"></ul>
+          <div class="preview" data-preview></div>
+        </div>
+        <p class="pal-foot"><span>↑ ↓ choose</span><span>↵ open</span><span>esc close</span></p>
+      </div>
+    </dialog>
+
+    <dialog id="sketch" class="sheet" aria-label="Quick sketch"><div class="panel"></div></dialog>
+
+    <dialog id="keys" class="sheet" aria-label="Keyboard shortcuts">
+      <div class="panel">
+        <h2>Keys</h2>
+        <dl>
+          {
+            KEYS.map(([key, what]) => (
+              <>
+                <dt>{key.split("  ").map((k) => <kbd>{k}</kbd>)}</dt>
+                <dd>{what}</dd>
+              </>
+            ))
+          }
+        </dl>
+      </div>
+    </dialog>
+
+    <script>
+      import "../scripts/app.ts"
+    </script>
+  </body>
+</html>

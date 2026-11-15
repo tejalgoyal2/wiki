@@ -1,5 +1,77 @@
 ---
-import Map from "../layouts/Map.astro"
+import Page from "../layouts/Page.astro"
+import { notes, lessons, find, kind, TRACKS } from "../lib/wiki"
+import { emblem } from "../lib/emblem"
+
+const today = lessons[0]
+const puzzle = today?.data.puzzle && find(today.data.puzzle)
+const keys = Object.keys(TRACKS)
+const plain = (t: string) => t.replace(/^#\d+\s*·\s*/, "")
+const links = (n: (typeof notes)[number]) => n.requires.length + n.leadsTo.length + n.mentionedIn.length
+// One shelf per track: paths first, then the notes most others lean on.
+const order = ["path", "concept", "pattern", "reference", "lesson", "puzzle"]
+const shelves = keys
+  .map((key, c) => ({
+    name: TRACKS[key],
+    c,
+    notes: notes
+      .filter((n) => n.data.track === key && n.type !== "review")
+      .sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type) || links(b) - links(a)),
+  }))
+  .filter((s) => s.notes.length)
+const starters = notes.filter((n) => n.type === "concept").sort((a, b) => links(b) - links(a)).slice(0, 5)
 ---
 
-<Map />
+<Page>
+  <main class="home">
+    <section class="hero">
+      <div class="backdrop" set:html={emblem("wiki")} />
+      <h1>What do you want to understand?</h1>
+      <button class="ask" type="button" data-open-search>
+        <span>Type any term: thread, event loop, overfitting…</span>
+        <kbd>/</kbd>
+      </button>
+      <p class="start">
+        Or start with
+        {starters.map((n) => <a href={n.url} data-slug={n.slug}>{n.title.toLowerCase()}</a>)}
+        <button type="button" data-random>surprise me</button>
+      </p>
+      <p class="you" data-you data-total={notes.filter((n) => n.type !== "page" && n.type !== "review").length}></p>
+    </section>
+
+    <div class="wrap">
+      {
+        today && (
+          <a class="today" href={today.url} data-slug={today.slug} style={`--c:var(--c${keys.indexOf(today.data.track)})`}>
+            <div class="face live" set:html={emblem(today.slug)} />
+            <div>
+              <span class="label">Today's read · {today.minutes} min</span>
+              <h3>{plain(today.title)}</h3>
+              <p>{today.lead}</p>
+              {puzzle && <p class="then">Then a puzzle to think over: {puzzle.title}</p>}
+            </div>
+          </a>
+        )
+      }
+
+      {
+        shelves.map((s) => (
+          <section class="shelf" style={`--c:var(--c${s.c})`}>
+            <h2 class="label">{s.name} <span>{s.notes.length}</span></h2>
+            <div class="wall">
+              {s.notes.map((n) => (
+                <a class="tile" href={n.url} data-slug={n.slug}>
+                  <span class="kind">{kind(n)}</span>
+                  <span class="mins">{n.minutes}m</span>
+                  <div class="face" set:html={emblem(n.slug)} />
+                  <h3>{plain(n.title)}</h3>
+                  <p>{n.lead}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))
+      }
+    </div>
+  </main>
+</Page>

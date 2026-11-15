@@ -1,10 +1,29 @@
 ---
-// Every note has its own address. Opening it lands you on the map, already at that card.
-import Map from "../layouts/Map.astro"
-import { notes, type Note } from "../lib/wiki"
+import Page from "../layouts/Page.astro"
+import { notes, kind, cardBody, TRACKS, type Note } from "../lib/wiki"
+import { emblem } from "../lib/emblem"
 
 export const getStaticPaths = () => notes.map((note) => ({ params: { slug: note.url.slice(1, -1) }, props: { note } }))
 const { note } = Astro.props as { note: Note }
+const c = Object.keys(TRACKS).indexOf(note.data.track)
+const meta = [kind(note), TRACKS[note.data.track], note.type !== "page" && `${note.minutes} min`].filter(Boolean)
 ---
 
-<Map note={note} />
+<Page title={note.title} description={note.lead} slug={note.type === "page" ? undefined : note.slug} c={c}>
+  <main>
+    <article>
+      <header class="field top">
+        <div class="col">
+          {meta.length > 0 && <p class="label">{meta.map((m) => <span>{m}</span>)}</p>}
+          <h1 class="title">{note.title.replace(/^#\d+\s*·\s*/, "")}</h1>
+          {note.lead && <p class="lead">{note.lead}</p>}
+        </div>
+        <div class="face live" set:html={emblem(note.slug)} />
+      </header>
+      <div class="read">
+        <div class="col" set:html={cardBody(note)} />
+        <nav class="toc" data-toc aria-label="On this page"></nav>
+      </div>
+    </article>
+  </main>
+</Page>
