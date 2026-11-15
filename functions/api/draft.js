@@ -8,7 +8,7 @@ const MODELS = ["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/meta/llama-3.1-
 
 const SYSTEM = `You write short entries for a public learning wiki about software, computing, data, machine learning, networks, maths and how technology works.
 The user gives you one term. Reply with JSON only, no other text:
-{"ok":true,"title":"the term, properly capitalised","one_line":"what it is, in one plain sentence of at most 30 words","body":"120 to 180 words in two or three short paragraphs separated by a blank line. Simple everyday English and short sentences. Say what it is, how it works, and give one concrete example. No markdown, no lists.","related":["up to 5 closely related technical terms"]}
+{"ok":true,"title":"the term, properly capitalised","one_line":"what it is, in one plain sentence of at most 30 words","paragraphs":["two or three short paragraphs, 120 to 180 words in total. Simple everyday English and short sentences. Say what it is, how it works, and give one concrete example. No markdown, no lists."],"related":["up to 5 closely related technical terms"]}
 If the term is not a real concept in those fields, is offensive, is a request rather than a term, or you are not sure what it means, reply {"ok":false}.
 Never invent version numbers, dates, names or statistics. If a detail is uncertain, leave it out.`
 
@@ -41,7 +41,9 @@ export async function onRequestGet({ request, env }) {
         temperature: 0.2,
       })
       const text = typeof out.response === "string" ? out.response : JSON.stringify(out.response ?? "")
-      draft = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1))
+      // Models sometimes put raw line breaks inside JSON strings; as spaces they are harmless.
+      draft = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1).replace(/[\r\n\t]+/g, " "))
+      if (Array.isArray(draft.paragraphs)) draft.body = draft.paragraphs.join("\n\n")
       break
     } catch {}
   }
