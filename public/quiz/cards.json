@@ -689,6 +689,39 @@
     "title": "Thread",
     "url": "/concepts/thread"
    }
+  },
+  {
+   "id": "12p2met",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Two threads each run `counter += 1` a million times on a shared counter, with no lock. Why can the total come out too low?",
+   "a": "`counter += 1` is read, add, write. If both threads read the same value before either writes, one increment is lost. A lock around the update makes the three steps happen as one.",
+   "from": {
+    "title": "Thread",
+    "url": "/concepts/thread"
+   }
+  },
+  {
+   "id": "vyy2n7",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "How do you stop two threads from deadlocking on two locks?",
+   "a": "Make every thread take the locks in the same global order (say `a` before `b`). Then no cycle of waiting can form. Holding locks for as short a time as possible also helps.",
+   "from": {
+    "title": "Thread",
+    "url": "/concepts/thread"
+   }
+  },
+  {
+   "id": "ktyxdl",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "You need to download 200 web pages in Python. Threads, processes or async, and why?",
+   "a": "Threads or async. The work is waiting on the network, and the GIL is released while a thread waits. Processes would work but cost more memory for no gain.",
+   "from": {
+    "title": "Thread",
+    "url": "/concepts/thread"
+   }
   }
  ]
 }

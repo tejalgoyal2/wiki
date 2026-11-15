@@ -280,3 +280,12 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - If the input is already sorted, two pointers may solve it in O(1) space instead.
 
 Built on the [[hash-map|hash map]] concept.
+
+### [[thread|Thread]]
+
+- **"It worked when I ran it"** is not evidence. Races are about rare timings.
+- **`join()` forgotten:** the main thread may exit, or read results, before workers finish.
+- **Locks held across slow calls:** you turn a parallel program back into a serial one.
+- **Threads for CPU work in CPython:** with the GIL they add overhead and no speed-up. Use `multiprocessing` or the free-threaded build.
+- **Shared mutable defaults and globals:** the same trap as in [[mutability|mutable default arguments]], now with timing on top.
+- **Unbounded thread creation:** one thread per request can exhaust memory (each thread reserves stack space). Use a pool.

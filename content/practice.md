@@ -6,7 +6,7 @@ nolink: true
 ---
 
 Every **Check yourself** and **How interviews ask it** question in the wiki, in one place. Say the answer out loud
-or write it down **before** opening it: testing yourself is what makes knowledge stick. 62 questions so far. This page is generated from
+or write it down **before** opening it: testing yourself is what makes knowledge stick. 65 questions so far. This page is generated from
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
@@ -337,3 +337,12 @@ the notes, so it grows every day.
 
 > [!question]- Why don't Python threads speed up a CPU-heavy loop in standard CPython?
 > The GIL lets only one thread execute Python bytecode at a time. Use processes (multiprocessing) or the free-threaded build instead.
+
+> [!question]- Two threads each run `counter += 1` a million times on a shared counter, with no lock. Why can the total come out too low?
+> `counter += 1` is read, add, write. If both threads read the same value before either writes, one increment is lost. A lock around the update makes the three steps happen as one.
+
+> [!question]- How do you stop two threads from deadlocking on two locks?
+> Make every thread take the locks in the same global order (say `a` before `b`). Then no cycle of waiting can form. Holding locks for as short a time as possible also helps.
+
+> [!question]- You need to download 200 web pages in Python. Threads, processes or async, and why?
+> Threads or async. The work is waiting on the network, and the GIL is released while a thread waits. Processes would work but cost more memory for no gain.
