@@ -46,7 +46,7 @@ const slugify = (s: string) =>
 
 // ---------- markdown ----------
 
-const THEMES = { light: "vitesse-light", dark: "vitesse-dark" }
+const THEMES = { light: "github-light", dark: "night-owl" }
 const hl = await createHighlighter({
   themes: Object.values(THEMES),
   langs: ["js", "ts", "python", "java", "sql", "bash", "json", "yaml", "html", "css", "go", "rust", "c", "cpp", "http", "diff"],
@@ -216,4 +216,97 @@ export function edges() {
     n.mentionedIn.forEach((m) => add(n, m))
   }
   return [...seen].map((s) => s.split("|"))
+}
+
+// ---------- the map ----------
+// Every note gets a place. Notes of one track settle into one region, linked notes pull together,
+// and the pages (About, Glossary ...) sit on a shelf along the bottom. Worked out once per build,
+// so the map is the same for everyone and a note never moves under you.
+import { forceSimulation, forceLink, forceManyBody, forceCollide, forceX, forceY } from "d3-force"
+
+const TRACK_KEYS = Object.keys(TRACKS)
+const onMap = notes.filter((n) => n.type !== "review")
+const shelf = onMap.filter((n) => n.type === "page")
+const R = 1150 + onMap.length * 20
+type Spot = { note: Note; x: number; y: number; hx: number; hy: number; fx?: number; fy?: number }
+const spots: Spot[] = onMap.map((note, i) => {
+  const t = TRACK_KEYS.indexOf(note.data.track)
+  const a = (t / TRACK_KEYS.length) * Math.PI * 2 - Math.PI / 2
+  if (t < 0) {
+    const x = (shelf.indexOf(note) - (shelf.length - 1) / 2) * 330
+    return { note, hx: x, hy: R * 1.55, x, y: R * 1.55, fx: x, fy: R * 1.55 }
+  }
+  const hx = Math.cos(a) * R, hy = Math.sin(a) * R * 0.85
+  return { note, hx, hy, x: hx + Math.cos(i * 2.4) * 220, y: hy + Math.sin(i * 2.4) * 220 }
+})
+const spotOf = new Map(spots.map((s) => [s.note.slug, s]))
+// Pages mention everything, so they get no wires; they are a shelf, not part of the terrain.
+const wires = edges().filter(([a, b]) => spotOf.get(a)?.note.data.track && spotOf.get(b)?.note.data.track)
+const sameTrack = (l: any) => l.source.note.data.track === l.target.note.data.track
+forceSimulation(spots as any)
+  .force("link", forceLink(wires.map(([a, b]) => ({ source: spotOf.get(a), target: spotOf.get(b) })) as any).distance(430).strength((l: any) => (sameTrack(l) ? 0.16 : 0.012)))
+  .force("charge", forceManyBody().strength(-3000))
+  .force("collide", forceCollide(195))
+  .force("x", forceX((d: any) => d.hx).strength(0.2))
+  .force("y", forceY((d: any) => d.hy).strength(0.2))
+  .stop()
+  .tick(400)
+for (const s of spots) s.x *= 1.4 // cards are wider than tall
+const floor = Math.max(...spots.filter((s) => s.fx === undefined).map((s) => s.y))
+for (const s of spots) if (s.fx !== undefined) s.y = floor + 560 // the shelf sits just under the terrain
+
+const hop = (n: Note) => `<a class="hop" href="${n.url}" data-slug="${n.slug}">${esc(n.title)}</a>`
+const hops = (title: string, list: Note[]) => (list.length ? `<section><h4>${title}</h4><p class="hops">${list.map(hop).join("")}</p></section>` : "")
+
+/** What an open card shows under its title: the note, then where to go next. */
+export function cardBody(n: Note) {
+  const sources: string[] = n.data.sources ?? []
+  const host = (u: string) => u.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]
+  const puzzle = n.data.puzzle && find(n.data.puzzle)
+  return (
+    `<div class="prose">${n.html}</div><footer class="card-foot">` +
+    (n.type === "page" ? "" : `<button type="button" class="gotit" data-gotit>I understand this</button>`) +
+    hops("Today's puzzle", puzzle ? [puzzle] : []) +
+    hops("Read first", n.requires) +
+    hops("Leads to", n.leadsTo) +
+    hops("Mentioned in", n.mentionedIn) +
+    (sources.length
+      ? `<section><h4>Sources</h4><p class="sources">${sources.map((s) => `<a href="${esc(s)}" rel="noopener" target="_blank">${esc(host(s))}</a>`).join("")}</p>` +
+        `<p class="checked">Last checked ${day(n.data.updated)}. The sources are the authority, not this page.</p></section>`
+      : "") +
+    `</footer>`
+  )
+}
+
+/** Everything the map needs to draw itself and to search: sent to the browser once. */
+export function mapData() {
+  const order = spots.map((s) => s.note.slug)
+  return {
+    nodes: spots.map((s) => ({
+      s: s.note.slug,
+      u: s.note.url,
+      t: s.note.title.replace(/^#\d+\s*·\s*/, ""),
+      a: (s.note.data.aliases ?? []).map(String),
+      d: s.note.lead,
+      k: kind(s.note),
+      c: Math.max(-1, TRACK_KEYS.indexOf(s.note.data.track)),
+      m: s.note.minutes,
+      g: s.note.requires.length + s.note.leadsTo.length + s.note.mentionedIn.length,
+      x: Math.round(s.x),
+      y: Math.round(s.y),
+    })),
+    edges: wires.map(([a, b]) => [order.indexOf(a), order.indexOf(b)]),
+    regions: TRACK_KEYS.map((key, c) => {
+      const mine = spots.filter((s) => s.note.data.track === key)
+      if (!mine.length) return null
+      return {
+        name: TRACKS[key],
+        c,
+        x: Math.round(mine.reduce((sum, s) => sum + s.x, 0) / mine.length),
+        y: Math.round(Math.min(...mine.map((s) => s.y)) - 190),
+        r: Math.round(Math.max(...mine.map((s) => Math.hypot(s.x - mine[0].x, s.y - mine[0].y))) / 2 + 600),
+      }
+    }).filter(Boolean),
+    today: lessons[0]?.slug,
+  }
 }

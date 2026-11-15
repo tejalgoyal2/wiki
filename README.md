@@ -1,14 +1,15 @@
 # wiki.tgoyal.me
 
-A learning wiki where every term opens its own note. Search a term, read it in plain words, follow any term
-inside it, and keep going. One new lesson a day.
+A learning wiki drawn as a map. Every note is a card with a fixed place; notes of one track form a region.
+Click a card and the camera flies in and it opens; click a term inside it and you fly to that term's card.
+One new lesson a day.
 
 ## How it fits together
 
 | Part | Where | What it does |
 |---|---|---|
 | Notes | `content/` | Markdown with frontmatter. Rules in [SCHEMA.md](SCHEMA.md) |
-| Site | `src/` (Astro) | Renders notes, builds the search index, the map and the side trail |
+| Site | `src/` (Astro) | `lib/wiki.ts` renders notes and lays out the map at build time; `scripts/app.ts` is the camera, cards, search, trail and sound; design rules are at the top of `styles/global.css` |
 | Checks | `scripts/` | Links terms, generates Glossary / Practice / Traps / quiz cards, runs every code block marked `run` |
 | Wanted | `functions/api/`, `schema.sql` | Counts searches that found nothing; a small open model on Cloudflare Workers AI writes a labelled draft |
 | Daily writer | the `daily-drop` Claude skill | Writes the lesson, its puzzle and new notes (most wanted terms first), then checks and deploys |
