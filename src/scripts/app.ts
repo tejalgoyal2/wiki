@@ -25,6 +25,58 @@ const store = {
   },
 }
 
+// ---------- options: mood, font, size, how terms open (kept in this browser only) ----------
+
+type Prefs = { theme: string; font: string; size: string; open: string; motion: string }
+const DEFAULTS: Prefs = { theme: "auto", font: "serif", size: "m", open: "side", motion: "on" }
+const MOODS = ["paper", "ink", "dusk", "candy", "mint", "terminal"]
+const DARK = ["ink", "dusk", "terminal"]
+const prefs = (): Prefs => ({ ...DEFAULTS, ...store.get<Partial<Prefs>>("prefs", {}) })
+
+function applyPrefs(root = document.documentElement) {
+  const p = prefs()
+  root.dataset.theme = p.theme !== "auto" ? p.theme : matchMedia("(prefers-color-scheme: dark)").matches ? "ink" : "paper"
+  root.dataset.font = p.font
+  root.dataset.size = p.size
+  document.querySelectorAll<HTMLElement>("[data-pref]").forEach((b) =>
+    b.setAttribute("aria-pressed", String(p[b.dataset.pref as keyof Prefs] === b.dataset.value)),
+  )
+}
+function setPref(key: keyof Prefs, value: string) {
+  store.set("prefs", { ...prefs(), [key]: value })
+  applyPrefs()
+}
+
+let toastTimer = 0
+function toast(text: string) {
+  let t = $("#toast")
+  if (!t) document.body.append((t = Object.assign(document.createElement("div"), { id: "toast" })))
+  t.textContent = text
+  void t.offsetWidth
+  t.classList.add("on")
+  clearTimeout(toastTimer)
+  toastTimer = window.setTimeout(() => t!.classList.remove("on"), 2400)
+}
+
+const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches
+function confetti(from: Element) {
+  if (calm()) return
+  const b = from.getBoundingClientRect()
+  for (let i = 0; i < 22; i++) {
+    const bit = document.createElement("i")
+    bit.className = "bit"
+    bit.style.cssText = `left:${b.left + b.width / 2}px;top:${b.top + b.height / 2}px;background:oklch(76% 0.17 ${i * 47})`
+    document.body.append(bit)
+    const a = Math.random() * 6.28, d = 50 + Math.random() * 110
+    bit.animate(
+      [{ transform: "none", opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d - 50}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }],
+      { duration: 800 + Math.random() * 500, easing: "cubic-bezier(.2,.8,.3,1)" },
+    ).onfinish = () => bit.remove()
+  }
+}
+
+const TAGS = ["rabbit holes welcome", "one more click", "ask why, five times", "curiosity, indexed", "dig a little deeper", "what's that word?", "learn it for real"]
+
 // ---------- what you've met and what you understand (kept in this browser only) ----------
 
 const meet = (slug: string) => {
@@ -142,7 +194,7 @@ function openSearch() {
 
 // ---------- the side trail: follow a term without leaving what you're reading ----------
 
-const HUES = [200, 250, 290, 330, 20, 60, 110, 160] // one step warmer for every term deeper
+const MILESTONES: Record<number, string> = { 4: "4 deep. Proper rabbit hole 🐇", 7: "7 deep. Bring a torch 🔦", 10: "10 deep. You live here now 🏡" }
 let trail: Stop[] = []
 let turn = 0
 
@@ -165,7 +217,9 @@ async function showPeek() {
   const body = $(".peek-body", peek)!
   const stop = trail.at(-1)!
   const mine = ++turn
-  peek.style.setProperty("--h", String(HUES[trail.length % HUES.length]))
+  peek.style.setProperty("--h", `calc(var(--h0) + ${trail.length * 47})`) // one step round the colour wheel per term deeper
+  $("[data-depth]", peek)!.textContent = trail.length > 1 ? `${trail.length} deep` : ""
+  if (MILESTONES[trail.length]) toast(MILESTONES[trail.length])
   peek.classList.add("open")
   document.documentElement.classList.add("peeking")
   const start = document.body.dataset.title
@@ -232,9 +286,7 @@ async function diagrams() {
   if (!nodes.length) return
   const src = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
   const mermaid = (await import(/* @vite-ignore */ src)).default
-  const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark")
-    ? document.documentElement.dataset.theme !== "light" && (document.documentElement.dataset.theme === "dark" || matchMedia("(prefers-color-scheme: dark)").matches)
-    : false
+  const dark = DARK.includes(document.documentElement.dataset.theme!)
   mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "neutral", fontFamily: "Geist Variable, system-ui, sans-serif" })
   await mermaid.run({ nodes })
 }
@@ -244,9 +296,10 @@ async function diagrams() {
 async function sky() {
   const c = $<HTMLCanvasElement>("#sky")
   if (!c) return
-  const g: { n: [string, string, string][]; e: [number, number][] } = await fetch("/graph.json").then((r) => r.json())
+  const g: { n: [string, string, string, string][]; e: [number, number][] } = await fetch("/graph.json").then((r) => r.json())
   const ctx = c.getContext("2d")!
-  const N = g.n.map(([slug, title, url]) => ({ slug, title, url, x: 0, y: 0, dx: 0, dy: 0, deg: 0, ph: Math.random() * 6.28 }))
+  const KINDS = ["concept", "lesson", "puzzle", "pattern", "reference", "path"]
+  const N = g.n.map(([slug, title, url, type]) => ({ slug, title, url, hue: Math.max(0, KINDS.indexOf(type)) * 55, x: 0, y: 0, dx: 0, dy: 0, deg: 0, ph: Math.random() * 6.28 }))
   g.e.forEach(([a, b]) => (N[a].deg++, N[b].deg++))
   let W = 0
   let H = 0
@@ -291,9 +344,12 @@ async function sky() {
     }
   }
 
-  const still = matchMedia("(prefers-reduced-motion: reduce)").matches
+  let still = false
   function draw(t: number) {
     if (!c!.isConnected) return
+    still = calm() || prefs().motion === "off"
+    const root = getComputedStyle(document.documentElement)
+    const [L, C, h0] = ["--L", "--C", "--h0"].map((v) => root.getPropertyValue(v).trim())
     // The canvas borrows its colours from CSS, so it follows the theme.
     const css = getComputedStyle(document.body)
     const probe = (v: string) => ((c!.style.color = `var(${v})`), getComputedStyle(c!).color)
@@ -314,9 +370,10 @@ async function sky() {
     for (const n of N) {
       const [x, y] = at(n)
       const lit = hot.has(n.slug) || n === over
-      const r = 2 + Math.min(n.deg, 9) * 0.4
-      ctx.globalAlpha = lit ? 1 : seen[n.slug] ? 0.9 : 0.4
-      ctx.fillStyle = lit || seen[n.slug] ? accent : muted
+      const r = (seen[n.slug] ? 3.2 : 2.2) + Math.min(n.deg, 9) * 0.45
+      // Each kind of note has its own colour; the ones you've met shine, the rest wait.
+      ctx.globalAlpha = lit ? 1 : seen[n.slug] ? 1 : 0.45
+      ctx.fillStyle = `oklch(${L} ${C} ${Number(h0) + n.hue})`
       ctx.beginPath(); ctx.arc(x, y, lit ? r + 2 : r, 0, 6.3); ctx.fill()
       if (lit) {
         ctx.globalAlpha = 0.18
@@ -329,7 +386,7 @@ async function sky() {
       }
     }
     ctx.globalAlpha = 1
-    if (!still) requestAnimationFrame(draw)
+    requestAnimationFrame(still ? () => setTimeout(() => draw(0), 400) : draw)
   }
 
   c.addEventListener("pointermove", (e) => {
@@ -337,10 +394,9 @@ async function sky() {
     const x = e.clientX - b.left, y = e.clientY - b.top
     over = N.find((n) => Math.hypot(n.x - x, n.y - y) < 16) ?? null
     c.style.cursor = over ? "pointer" : ""
-    if (still) draw(0)
   })
   c.addEventListener("click", () => over && navigate(over.url))
-  addEventListener("resize", () => c.isConnected && (layout(), still && draw(0)))
+  addEventListener("resize", () => c.isConnected && layout())
   layout()
   await document.fonts.ready
   requestAnimationFrame(draw)
@@ -370,7 +426,8 @@ async function wantedPage() {
 document.addEventListener("click", (e) => {
   const el = e.target as Element
   const term = el.closest<HTMLAnchorElement>("a.term")
-  if (term && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && term.closest(".prose")) {
+  const beside = prefs().open === "side" || term?.dataset.want || term?.closest("#peek")
+  if (term && beside && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && term.closest(".prose")) {
     e.preventDefault()
     openPeek({ slug: term.dataset.slug, want: term.dataset.want, title: term.textContent!.replace(/\s+\d+$/, "").trim() }, !!term.closest("#peek"))
     return
@@ -384,42 +441,128 @@ document.addEventListener("click", (e) => {
   }
   if (el.closest("[data-peek-close]")) return closePeek()
   if (el.closest("[data-open-search]")) return openSearch()
-  if (el.id === "palette") return (el as HTMLDialogElement).close()
-  if (el.closest("[data-theme-toggle]")) {
-    const root = document.documentElement
-    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches
-    root.dataset.theme = dark ? "light" : "dark"
-    return store.set("theme", root.dataset.theme)
+  if (el instanceof HTMLDialogElement) return el.close() // a click outside the panel
+  if (el.closest("[data-open-prefs]")) return openSheet("#prefs")
+  if (el.closest("[data-open-keys]")) return openSheet("#keys")
+  if (el.closest("[data-random]")) return void surprise()
+  const pref = el.closest<HTMLElement>("[data-pref]")
+  if (pref) return setPref(pref.dataset.pref as keyof Prefs, pref.dataset.value!)
+  if (el.closest("[data-gotit]")) understood()
+}, true)
+
+function openSheet(id: string) {
+  document.querySelectorAll<HTMLDialogElement>("dialog[open]").forEach((d) => d.close())
+  $<HTMLDialogElement>(id)!.showModal()
+}
+
+function understood() {
+  const slug = document.body.dataset.slug
+  const btn = $("[data-gotit]")
+  if (!slug || !btn) return
+  const known = store.get<Record<string, number>>("known", {})
+  if (known[slug]) delete known[slug]
+  else {
+    known[slug] = Date.now()
+    confetti(btn)
+    const n = Object.keys(known).length
+    toast(n === 1 ? "First one understood. Nice." : `${n} notes understood`)
   }
-  if (el.closest("[data-gotit]")) {
-    const slug = document.body.dataset.slug!
-    const known = store.get<Record<string, number>>("known", {})
-    if (known[slug]) delete known[slug]
-    else known[slug] = Date.now()
-    store.set("known", known)
-    decorate()
+  store.set("known", known)
+  decorate()
+}
+
+async function surprise() {
+  const pool = (await getIndex()).filter((e) => e.k && e.s !== document.body.dataset.slug)
+  navigate(pool[Math.floor(Math.random() * pool.length)].u)
+}
+
+// ] and [ walk through the terms on the page, opening each beside it.
+let cursor = -1
+function walk(step: number) {
+  const terms = [...document.querySelectorAll<HTMLAnchorElement>("main .prose a.term")]
+  if (!terms.length) return toast("No terms on this page")
+  cursor = cursor < 0 && step < 0 ? terms.length - 1 : (cursor + step + terms.length) % terms.length
+  terms.forEach((t) => t.classList.remove("cursor"))
+  const a = terms[cursor]
+  a.classList.add("cursor")
+  a.scrollIntoView({ block: "center", behavior: calm() ? "auto" : "smooth" })
+  openPeek({ slug: a.dataset.slug, want: a.dataset.want, title: a.textContent!.trim() }, false)
+}
+
+// The home box types out ideas while it waits.
+async function typewriter(input: HTMLInputElement) {
+  if (calm()) return
+  const ideas = [...document.querySelectorAll(".try a")].map((a) => `try “${a.textContent}”`)
+  const rest = input.placeholder
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
+  await wait(3500)
+  for (let i = 0; input.isConnected && ideas.length; i++) {
+    const text = i % 2 ? rest : ideas[(i >> 1) % ideas.length]
+    for (let n = 1; n <= text.length && input.isConnected; n++) {
+      input.placeholder = text.slice(0, n)
+      await wait(38)
+    }
+    await wait(i % 2 ? 4000 : 1800)
   }
-}, true) // capture: decide before the page router treats a term as an ordinary link
+} // capture: decide before the page router treats a term as an ordinary link
 
 document.addEventListener("keydown", (e) => {
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target as Element).tagName)
-  if ((e.key === "/" && !typing) || (e.key === "k" && (e.metaKey || e.ctrlKey))) {
+  if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
     e.preventDefault()
-    openSearch()
-  } else if (e.key === "Escape" && !$<HTMLDialogElement>("#palette")?.open) closePeek()
+    return openSearch()
+  }
+  if (typing || e.metaKey || e.ctrlKey || e.altKey || document.querySelector("dialog[open]")) return
+  const peeking = $("#peek")?.classList.contains("open")
+  const keys: Record<string, () => unknown> = {
+    "/": openSearch,
+    "?": () => openSheet("#keys"),
+    ",": () => openSheet("#prefs"),
+    r: surprise,
+    h: () => navigate("/"),
+    w: () => navigate("/wanted/"),
+    d: () => document.body.dataset.today && navigate(document.body.dataset.today),
+    u: understood,
+    "]": () => walk(1),
+    "[": () => walk(-1),
+    t: () => {
+      const now = document.documentElement.dataset.theme!
+      const next = MOODS[(MOODS.indexOf(now) + 1) % MOODS.length]
+      setPref("theme", next)
+      toast(`Mood: ${next}`)
+    },
+    f: () => toast(document.documentElement.classList.toggle("focus") ? "Focus on. Press f to come back." : "Focus off"),
+    a: () => {
+      const all = [...document.querySelectorAll<HTMLDetailsElement>("main details.callout")]
+      const open = !all.every((d) => d.open)
+      all.forEach((d) => (d.open = open))
+      if (all.length) toast(open ? "Answers open. No peeking next time." : "Answers hidden")
+    },
+    Escape: closePeek,
+    ArrowLeft: () => peeking && (trail.length > 1 ? ((trail = trail.slice(0, -1)), showPeek()) : closePeek()),
+    o: () => peeking && $<HTMLAnchorElement>("#peek a.go")?.click(),
+  }
+  const run = keys[e.key]
+  if (!run || (e.key === "ArrowLeft" && !peeking)) return
+  e.preventDefault()
+  run()
 })
 
 document.addEventListener("astro:before-swap", (e: any) => {
   closePeek()
-  // Carry the reader's theme choice onto the next page.
-  const theme = document.documentElement.dataset.theme
-  if (theme) e.newDocument.documentElement.dataset.theme = theme
+  applyPrefs(e.newDocument.documentElement) // carry the reader's mood onto the next page
 })
 
 document.addEventListener("astro:page-load", () => {
   const slug = document.body.dataset.slug
   if (slug) meet(slug)
+  cursor = -1
+  applyPrefs()
   decorate()
+  const tag = $("[data-tag]")
+  if (tag) tag.textContent = TAGS[Math.floor(Math.random() * TAGS.length)]
+  const hero = $<HTMLInputElement>("#hero-q input")
+  if (hero) typewriter(hero)
   document.querySelectorAll<HTMLElement>(".q").forEach(wire)
   if (matchMedia("(pointer: fine)").matches) $<HTMLInputElement>("#hero-q input")?.focus()
   diagrams()

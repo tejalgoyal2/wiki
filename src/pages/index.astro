@@ -30,6 +30,7 @@ const starters = ofType("concept").sort((a, b) => b.leadsTo.length + b.mentioned
       <p class="try">
         Start anywhere:
         {starters.map((n) => <a href={n.url} data-slug={n.slug}>{n.title.toLowerCase()}</a>)}
+        <button type="button" data-random>surprise me</button>
       </p>
       <p class="count" data-you data-total={real.length}>
         {real.length} notes · {edges().length} links · {wanted.size} terms waiting to be written
