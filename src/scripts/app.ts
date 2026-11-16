@@ -401,6 +401,8 @@ document.addEventListener("click", (e) => {
   if (el.closest("#sketch a[data-slug]")) $<HTMLDialogElement>("#sketch")!.close()
   if (el.closest("[data-open-search]")) return openSearch()
   if (el.closest("[data-random]")) return void random()
+  const more = el.closest<HTMLElement>("[data-more]")
+  if (more) return more.closest(".shelf")!.classList.add("all"), more.remove()
   if (el.closest("[data-gotit]")) return understood()
   if (el.closest("[data-theme-toggle]")) return theme()
   if (el.closest("[data-sound]")) return mute()
