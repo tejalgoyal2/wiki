@@ -77,7 +77,7 @@ the main thread. A promise changes **when the result is delivered**, not where t
   to run first.
 - Do not rely on exact tick counts between two promise chains. The numbers can differ between engines and versions.
 - A heavy synchronous loop inside a `.then` callback is still a long task. Putting work in a microtask makes it run
-  earlier, not off the main thread. For that you need a [[web-worker|web worker]].
+  earlier, not off the [[thread|main thread]]. For that you need a [[web-worker|web worker]].
 - `queueMicrotask` is not a delay. If you want the browser to render before your code runs, you need a task or
   `requestAnimationFrame`, not a microtask.
 
