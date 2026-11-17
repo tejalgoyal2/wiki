@@ -73,6 +73,13 @@ the main thread. A promise changes **when the result is delivered**, not where t
 
 - A microtask that keeps scheduling microtasks blocks the page completely: no paint, no input.
 - In Node.js, `process.nextTick` callbacks have their own queue that runs **before** promise microtasks.
+- Awaiting a value that is already available still yields. `await` always gives other microtasks queued earlier a chance
+  to run first.
+- Do not rely on exact tick counts between two promise chains. The numbers can differ between engines and versions.
+- A heavy synchronous loop inside a `.then` callback is still a long task. Putting work in a microtask makes it run
+  earlier, not off the main thread. For that you need a [[web-worker|web worker]].
+- `queueMicrotask` is not a delay. If you want the browser to render before your code runs, you need a task or
+  `requestAnimationFrame`, not a microtask.
 
 ### [[promise|Promise]]
 
@@ -266,7 +273,53 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - **Fitting preprocessing before splitting.** That is [[data-leakage|data leakage]]: scalers, encoders and feature
   selection must be fitted on the training set only.
 
+## LLMs & RAG
+
+### [[2026-11-17-tokens|#4 · Tokens and context windows]]
+
+- **Counting characters or words.** English averages roughly four characters per token, but that is a rule of thumb for English prose only. Code, numbers, other languages and emoji differ.
+- **Using another model's tokenizer.** Vocabularies differ between model families. A count from one is only an estimate for another.
+- **Forgetting the reply.** Input plus output must fit in the window. Many APIs also cap the output length separately.
+- **Leading spaces and case.** `hello`, ` hello` and `Hello` are usually different tokens. Stray whitespace in a prompt changes the count and can change behaviour slightly.
+- **Letter-level tasks.** "How many r's in strawberry?" asks about characters, but the model sees a few chunks. Do exact string work in code.
+- **Numbers.** Long numbers are split into chunks in tokenizer-specific ways, which is one reason arithmetic on long numbers is unreliable.
+
+### [[context-window|Context window]]
+
+- Forgetting to reserve room for the reply.
+- Measuring the prompt in characters. Count tokens with the target model's counter.
+- Assuming the model will use every part of a long context equally well.
+
+### [[token|Token]]
+
+- English averages roughly four characters per token. That is a rule of thumb for English prose, not for code, numbers or other languages.
+- `hello`, ` hello` and `Hello` are usually different tokens.
+- Counting with another model's tokenizer gives only an estimate. Use the provider's counter for the model you call.
+- Because the model sees chunks, not letters, letter-level tasks (count the r's, reverse a word) are unreliable. Do them in code.
+
+## Backend & System Design
+
+### [[unit-testing|Unit testing]]
+
+- Testing implementation details (which helper was called) instead of behaviour. The test then breaks on every refactor.
+- Tests that depend on order, the current time or a live service, so they fail at random.
+- Over-mocking: if everything is mocked, the test proves only that the mocks agree with themselves.
+- Treating a coverage percentage as quality. Lines run is not the same as behaviour checked.
+
 ## CS Fundamentals
+
+### [[b-tree|B-tree]]
+
+- An index speeds reads but slows writes, since each insert must also update the tree.
+- A B-tree helps with `=`, ranges and sorting. It does not help with `LIKE '%text'` (unknown prefix).
+- A multi-column index is ordered by its first column first; a query on only the second column cannot use it well.
+- Random keys (such as random UUIDs) spread inserts over the whole tree and cause more page splits than increasing keys.
+
+### [[cpu|CPU]]
+
+- More threads than cores does not add speed for CPU-bound work. In CPython, the [[gil|GIL]] also stops threads running Python code in parallel; use processes for CPU-bound work.
+- A program waiting on disk or network leaves the CPU idle. That is I/O-bound work, and threads or async help there.
+- Big-O ignores the cache. Two O(n) loops can differ a lot in real time.
 
 ### [[hash-map|Hash map]]
 

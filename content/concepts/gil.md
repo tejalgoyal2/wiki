@@ -29,7 +29,7 @@ putting a lock on every object, which made the interpreter simpler and single-th
 ## What it means in practice
 
 - **I/O-bound work is fine with threads.** The GIL is released while a thread waits on the network, disk or `time.sleep`, so other threads run.
-- **CPU-bound work does not speed up with threads.** Use `multiprocessing` / `ProcessPoolExecutor` (separate processes, each with its own GIL), or libraries like NumPy that do heavy work in C and release the GIL.
+- **[[cpu|CPU]]-bound work does not speed up with threads.** Use `multiprocessing` / `ProcessPoolExecutor` (separate processes, each with its own GIL), or libraries like NumPy that do heavy work in C and release the GIL.
 - **Free-threaded Python.** Python 3.13 added an optional build without the GIL ([PEP 703](https://peps.python.org/pep-0703/)), usually installed as `python3.13t`. It is opt-in, and some C extensions still need updates to support it.
 
 ```py run

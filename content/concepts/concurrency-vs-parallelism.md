@@ -17,7 +17,7 @@ updated: 2026-11-12
 <!-- /read-first -->
 
 **Concurrency** is about structure: several tasks are *in progress* during the same period, and they take turns.
-**Parallelism** is about execution: several tasks *run at the same instant*, on different CPU cores. Rob Pike's talk
+**Parallelism** is about execution: several tasks *run at the same instant*, on different [[cpu|CPU cores]]. Rob Pike's talk
 "Concurrency is not parallelism" (2012) is the classic explanation.
 
 A cook with three pots on the stove, stirring each in turn, is concurrent. Three cooks each stirring one pot is parallel.

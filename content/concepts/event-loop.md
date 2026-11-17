@@ -198,7 +198,7 @@ order is not guaranteed: it depends on whether the 1 ms minimum timer delay has 
   the order they were queued, adding new ones to the back, then tasks.
 - **"Is Node.js single-threaded?"** Your JavaScript runs on one thread. libuv keeps a thread pool for work the
   operating system cannot do asynchronously (file system calls, DNS lookups, some crypto), and the kernel handles
-  network I/O. That is why one Node.js process can serve many connections at once, and why a CPU-heavy request
+  network I/O. That is why one Node.js process can serve many connections at once, and why a [[cpu|CPU]]-heavy request
   still blocks all of them.
 
 ## Related

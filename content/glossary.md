@@ -37,20 +37,30 @@ This page is generated from the notes themselves, so it is always complete.
 | [[overfitting\|Overfitting]] | When a model learns the noise in its training data along with the real pattern, so it scores well in training and worse on new data. |
 | [[train-validation-test-split\|Train, validation and test split]] | Cutting labelled data into three groups - one to fit the model, one to choose between models, one to measure the final choice honestly. |
 
+## LLMs & RAG
+
+| Term | In one line |
+|---|---|
+| [[context-window\|Context window]] | The maximum number of tokens a language model can take in and produce in one request, prompt and reply together. |
+| [[token\|Token]] | A piece of text, mapped to an integer, that a language model reads and writes instead of letters or words. |
+
 ## Backend & System Design
 
 | Term | In one line |
 |---|---|
 | [[java\|Java]] | A statically typed, object-oriented language that compiles to bytecode for the JVM. Heavily used in banks and large companies. |
 | [[microservices\|Microservices]] | Building one product as several small services that each own one job and their own data, and talk over the network. |
+| [[unit-testing\|Unit testing]] | Checking one small piece of code, such as a function, on its own with fixed inputs and expected outputs, run automatically on every change. |
 
 ## CS Fundamentals
 
 | Term | In one line |
 |---|---|
+| [[b-tree\|B-tree]] | A balanced search tree with many keys per node, used for database indexes because it finds a key in very few disk reads. |
 | [[big-o-notation\|Big-O notation]] | A way to say how an algorithm's time or memory grows as the input grows, ignoring constants. |
 | [[call-stack\|Call stack]] | The list of functions currently running, newest on top. A function's frame is pushed when it is called and popped when it returns. |
 | [[concurrency-vs-parallelism\|Concurrency vs parallelism]] | Concurrency is dealing with many things in progress at once; parallelism is doing many things at the same instant. |
+| [[cpu\|CPU]] | The chip that executes a program's instructions one after another; it has cores, registers and caches, and its speed depends heavily on how fast data reaches it. |
 | [[hash-map\|Hash map]] | A key-value store that finds any key in O(1) time on average by turning the key into an array position with a hash function. |
 | [[hash-map-lookup\|Hash map lookup (pattern)]] | Walk the input once and remember what you've seen in a hash map or set, so each "have I seen X?" question costs O(1). |
 | [[thread\|Thread]] | A sequence of instructions the operating system can schedule. Threads in one process share memory; each has its own call stack. |

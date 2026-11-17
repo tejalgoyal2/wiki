@@ -6,7 +6,7 @@ nolink: true
 ---
 
 Every **Check yourself** and **How interviews ask it** question in the wiki, in one place. Say the answer out loud
-or write it down **before** opening it: testing yourself is what makes knowledge stick. 65 questions so far. This page is generated from
+or write it down **before** opening it: testing yourself is what makes knowledge stick. 84 questions so far. This page is generated from
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
@@ -94,11 +94,24 @@ the notes, so it grows every day.
 
 ### From [[microtask-queue|Microtask queue]]
 
+> [!question]- "What is the output of a script with a timer, a promise and `console.log`, and why?"
+> Synchronous logs first. Then the promise callback, because the microtask queue is drained right after the script
+> finishes. Then the timer, which is a separate task that waits for a later turn of the loop. Say the rule out loud:
+> the stack empties, then all microtasks, then render, then the next task.
+
+> [!question]- "Can a promise chain freeze the browser?"
+> Yes. The queue must be empty before the loop moves on, so an endless chain of promise callbacks never lets it
+> paint or handle input. An endless chain of `setTimeout` calls does not, because each callback is a separate task.
+
 > [!question]- Why does `.then` run before `setTimeout(fn, 0)`?
 > `.then` callbacks are microtasks, and the microtask queue is emptied right after the current task; the timer callback is a separate task that waits for a later turn.
 
 > [!question]- What happens if microtasks keep adding microtasks forever?
 > The queue never empties, so the browser never renders or handles input: the page freezes.
+
+> [!question]- In a browser, a button has two click listeners and the first queues a microtask. When does it run for a real click versus for `button.click()` called from code?
+> For a real click, between the two listeners, because the stack is empty after the first one returns. For `button.click()`
+> from your code, after both listeners, because your calling code is still on the stack.
 
 ### From [[promise|Promise]]
 
@@ -278,6 +291,44 @@ the notes, so it grows every day.
 > [!question]- You have a year of daily data. Should you shuffle before splitting?
 > No. Split by time so the model is trained on earlier days and evaluated on later ones, which is how it will be used.
 
+## LLMs & RAG
+
+### From [[2026-11-17-tokens|#4 · Tokens and context windows]]
+
+> [!question]- "What is a token, and why not just use words or characters?"
+> A token is a piece of text from a fixed vocabulary, mapped to an integer. Words alone need an enormous vocabulary and fail on rare words, names and typos. Characters never fail but make sequences very long, and cost grows with length. Subword tokens sit between: common words are one token, rare ones split into known pieces, so the vocabulary stays manageable and nothing is unknown.
+
+> [!question]- "A user complains that your summariser errors on long documents. How do you debug it?"
+> I would count tokens, not characters, with the tokenizer for the exact model. Prompt plus expected output has to fit the context window. If it does not fit, I would split the document into chunks, summarise each, and summarise the summaries. I would also check the output limit and whether the error is a length error or a quality problem on long inputs.
+
+> [!question]- "How would you reduce the cost of an LLM feature?"
+> Cut input tokens first: shorter system prompt, trim or summarise old chat history, retrieve only relevant chunks instead of whole documents. Cache a repeated prefix if the provider supports it. Use a smaller model where quality allows. Cap output length. Measure tokens per request in logs so the effect is visible.
+
+> [!question]- Why does a BPE tokenizer never meet an "unknown word"?
+> It can always fall back to smaller pieces, down to single characters or bytes, which are all in the vocabulary. A new word is split into known pieces.
+
+> [!question]- Why does a ten-turn chat cost much more than ten separate one-turn requests of the same size?
+> Each turn resends the whole history as input, so input tokens add up like 1 + 2 + 3 + ... turns' worth. Cost grows roughly with the square of the number of turns.
+
+> [!question]- You measured a prompt as 4,000 tokens on one model family. Is it 4,000 on another?
+> Not necessarily. Each family has its own vocabulary, so counts differ. Use the target model's own counter.
+
+### From [[context-window|Context window]]
+
+> [!question]- A model has a 10,000-token window and your prompt is 9,800 tokens. What is the risk?
+> Only 200 tokens remain for the reply, so a longer answer is cut off or the request is rejected.
+
+> [!question]- Why does a long chat get slower and costlier per message?
+> Each message resends the whole history, so the input grows every turn.
+
+### From [[token|Token]]
+
+> [!question]- Why use subword tokens instead of whole words?
+> A whole-word vocabulary would be huge and would fail on rare words, names and typos. Subwords keep the vocabulary small and let any new word be built from known pieces.
+
+> [!question]- Why can the same prompt cost different amounts on two models?
+> Their tokenizers differ, so they split the text into a different number of tokens, and their per-token prices differ too.
+
 ## Backend & System Design
 
 ### From [[java|Java]]
@@ -295,6 +346,14 @@ the notes, so it grows every day.
 
 > [!question]- Name one good reason to split a service out of a monolith.
 > One part needs to scale very differently (for example search under heavy load), or a separate team needs to deploy it on its own schedule.
+
+### From [[unit-testing|Unit testing]]
+
+> [!question]- Why replace a database call with a fake in a unit test?
+> A real database is slow and its state can change between runs, so the test would be slow and unrepeatable. A fake returns fixed data, so the test checks only your logic.
+
+> [!question]- What is the difference between a unit and an integration test?
+> A unit test checks one piece in isolation. An integration test checks that several real pieces work together, such as your code with an actual database.
 
 ## CS Fundamentals
 
@@ -346,3 +405,19 @@ the notes, so it grows every day.
 
 > [!question]- You need to download 200 web pages in Python. Threads, processes or async, and why?
 > Threads or async. The work is waiting on the network, and the GIL is released while a thread waits. Processes would work but cost more memory for no gain.
+
+### From [[b-tree|B-tree]]
+
+> [!question]- Why is a B-tree shallower than a binary search tree with the same keys?
+> Each node has many children, so each level cuts the search space by a factor of the fanout, not by two.
+
+> [!question]- Why do databases prefer a B-tree over a hash index for most columns?
+> A B-tree keeps keys sorted, so it handles ranges and ordering as well as equality. A hash index handles only equality.
+
+### From [[cpu|CPU]]
+
+> [!question]- Why does a program with 100 CPU-bound threads on a 4-core machine not run 100 times faster?
+> Only four threads can run at once. The rest wait for a turn, and switching between them adds cost.
+
+> [!question]- Why can scanning an array be faster than scanning a linked list of the same length?
+> Array elements sit next to each other, so each cache load brings in several of them. Linked nodes are scattered, so more reads go to slow main memory.

@@ -141,6 +141,28 @@
    }
   },
   {
+   "id": "laczuz",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "What is the output of a script with a timer, a promise and `console.log`, and why?",
+   "a": "Synchronous logs first. Then the promise callback, because the microtask queue is drained right after the script\nfinishes. Then the timer, which is a separate task that waits for a later turn of the loop. Say the rule out loud:\nthe stack empties, then all microtasks, then render, then the next task.",
+   "from": {
+    "title": "Microtask queue",
+    "url": "/concepts/microtask-queue"
+   }
+  },
+  {
+   "id": "q424q2",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "Can a promise chain freeze the browser?",
+   "a": "Yes. The queue must be empty before the loop moves on, so an endless chain of promise callbacks never lets it\npaint or handle input. An endless chain of `setTimeout` calls does not, because each callback is a separate task.",
+   "from": {
+    "title": "Microtask queue",
+    "url": "/concepts/microtask-queue"
+   }
+  },
+  {
    "id": "1vzl7qd",
    "track": "javascript",
    "kind": "check",
@@ -157,6 +179,17 @@
    "kind": "check",
    "q": "What happens if microtasks keep adding microtasks forever?",
    "a": "The queue never empties, so the browser never renders or handles input: the page freezes.",
+   "from": {
+    "title": "Microtask queue",
+    "url": "/concepts/microtask-queue"
+   }
+  },
+  {
+   "id": "7b0pm0",
+   "track": "javascript",
+   "kind": "check",
+   "q": "In a browser, a button has two click listeners and the first queues a microtask. When does it run for a real click versus for `button.click()` called from code?",
+   "a": "For a real click, between the two listeners, because the stack is empty after the first one returns. For `button.click()`\nfrom your code, after both listeners, because your calling code is still on the stack.",
    "from": {
     "title": "Microtask queue",
     "url": "/concepts/microtask-queue"
@@ -537,6 +570,116 @@
    }
   },
   {
+   "id": "6ojews",
+   "track": "llm-rag",
+   "kind": "interview",
+   "q": "What is a token, and why not just use words or characters?",
+   "a": "A token is a piece of text from a fixed vocabulary, mapped to an integer. Words alone need an enormous vocabulary and fail on rare words, names and typos. Characters never fail but make sequences very long, and cost grows with length. Subword tokens sit between: common words are one token, rare ones split into known pieces, so the vocabulary stays manageable and nothing is unknown.",
+   "from": {
+    "title": "#4 · Tokens and context windows",
+    "url": "/lessons/2026-11-17-tokens"
+   }
+  },
+  {
+   "id": "kt3gfh",
+   "track": "llm-rag",
+   "kind": "interview",
+   "q": "A user complains that your summariser errors on long documents. How do you debug it?",
+   "a": "I would count tokens, not characters, with the tokenizer for the exact model. Prompt plus expected output has to fit the context window. If it does not fit, I would split the document into chunks, summarise each, and summarise the summaries. I would also check the output limit and whether the error is a length error or a quality problem on long inputs.",
+   "from": {
+    "title": "#4 · Tokens and context windows",
+    "url": "/lessons/2026-11-17-tokens"
+   }
+  },
+  {
+   "id": "1djl4c6",
+   "track": "llm-rag",
+   "kind": "interview",
+   "q": "How would you reduce the cost of an LLM feature?",
+   "a": "Cut input tokens first: shorter system prompt, trim or summarise old chat history, retrieve only relevant chunks instead of whole documents. Cache a repeated prefix if the provider supports it. Use a smaller model where quality allows. Cap output length. Measure tokens per request in logs so the effect is visible.",
+   "from": {
+    "title": "#4 · Tokens and context windows",
+    "url": "/lessons/2026-11-17-tokens"
+   }
+  },
+  {
+   "id": "4feh5t",
+   "track": "llm-rag",
+   "kind": "check",
+   "q": "Why does a BPE tokenizer never meet an \"unknown word\"?",
+   "a": "It can always fall back to smaller pieces, down to single characters or bytes, which are all in the vocabulary. A new word is split into known pieces.",
+   "from": {
+    "title": "#4 · Tokens and context windows",
+    "url": "/lessons/2026-11-17-tokens"
+   }
+  },
+  {
+   "id": "18yxkzz",
+   "track": "llm-rag",
+   "kind": "check",
+   "q": "Why does a ten-turn chat cost much more than ten separate one-turn requests of the same size?",
+   "a": "Each turn resends the whole history as input, so input tokens add up like 1 + 2 + 3 + ... turns' worth. Cost grows roughly with the square of the number of turns.",
+   "from": {
+    "title": "#4 · Tokens and context windows",
+    "url": "/lessons/2026-11-17-tokens"
+   }
+  },
+  {
+   "id": "1pl9fnc",
+   "track": "llm-rag",
+   "kind": "check",
+   "q": "You measured a prompt as 4,000 tokens on one model family. Is it 4,000 on another?",
+   "a": "Not necessarily. Each family has its own vocabulary, so counts differ. Use the target model's own counter.",
+   "from": {
+    "title": "#4 · Tokens and context windows",
+    "url": "/lessons/2026-11-17-tokens"
+   }
+  },
+  {
+   "id": "1691mr9",
+   "track": "llm-rag",
+   "kind": "check",
+   "q": "A model has a 10,000-token window and your prompt is 9,800 tokens. What is the risk?",
+   "a": "Only 200 tokens remain for the reply, so a longer answer is cut off or the request is rejected.",
+   "from": {
+    "title": "Context window",
+    "url": "/concepts/context-window"
+   }
+  },
+  {
+   "id": "cysjek",
+   "track": "llm-rag",
+   "kind": "check",
+   "q": "Why does a long chat get slower and costlier per message?",
+   "a": "Each message resends the whole history, so the input grows every turn.",
+   "from": {
+    "title": "Context window",
+    "url": "/concepts/context-window"
+   }
+  },
+  {
+   "id": "30nxtd",
+   "track": "llm-rag",
+   "kind": "check",
+   "q": "Why use subword tokens instead of whole words?",
+   "a": "A whole-word vocabulary would be huge and would fail on rare words, names and typos. Subwords keep the vocabulary small and let any new word be built from known pieces.",
+   "from": {
+    "title": "Token",
+    "url": "/concepts/token"
+   }
+  },
+  {
+   "id": "18nhq6c",
+   "track": "llm-rag",
+   "kind": "check",
+   "q": "Why can the same prompt cost different amounts on two models?",
+   "a": "Their tokenizers differ, so they split the text into a different number of tokens, and their per-token prices differ too.",
+   "from": {
+    "title": "Token",
+    "url": "/concepts/token"
+   }
+  },
+  {
    "id": "1pbdr28",
    "track": "backend",
    "kind": "check",
@@ -578,6 +721,28 @@
    "from": {
     "title": "Microservices",
     "url": "/concepts/microservices"
+   }
+  },
+  {
+   "id": "1xkck9d",
+   "track": "backend",
+   "kind": "check",
+   "q": "Why replace a database call with a fake in a unit test?",
+   "a": "A real database is slow and its state can change between runs, so the test would be slow and unrepeatable. A fake returns fixed data, so the test checks only your logic.",
+   "from": {
+    "title": "Unit testing",
+    "url": "/concepts/unit-testing"
+   }
+  },
+  {
+   "id": "1atvd2y",
+   "track": "backend",
+   "kind": "check",
+   "q": "What is the difference between a unit and an integration test?",
+   "a": "A unit test checks one piece in isolation. An integration test checks that several real pieces work together, such as your code with an actual database.",
+   "from": {
+    "title": "Unit testing",
+    "url": "/concepts/unit-testing"
    }
   },
   {
@@ -721,6 +886,50 @@
    "from": {
     "title": "Thread",
     "url": "/concepts/thread"
+   }
+  },
+  {
+   "id": "n2ewgw",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Why is a B-tree shallower than a binary search tree with the same keys?",
+   "a": "Each node has many children, so each level cuts the search space by a factor of the fanout, not by two.",
+   "from": {
+    "title": "B-tree",
+    "url": "/concepts/b-tree"
+   }
+  },
+  {
+   "id": "yc9h1c",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Why do databases prefer a B-tree over a hash index for most columns?",
+   "a": "A B-tree keeps keys sorted, so it handles ranges and ordering as well as equality. A hash index handles only equality.",
+   "from": {
+    "title": "B-tree",
+    "url": "/concepts/b-tree"
+   }
+  },
+  {
+   "id": "1pvz562",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Why does a program with 100 CPU-bound threads on a 4-core machine not run 100 times faster?",
+   "a": "Only four threads can run at once. The rest wait for a turn, and switching between them adds cost.",
+   "from": {
+    "title": "CPU",
+    "url": "/concepts/cpu"
+   }
+  },
+  {
+   "id": "11v23l1",
+   "track": "cs-fundamentals",
+   "kind": "check",
+   "q": "Why can scanning an array be faster than scanning a linked list of the same length?",
+   "a": "Array elements sit next to each other, so each cache load brings in several of them. Linked nodes are scattered, so more reads go to slow main memory.",
+   "from": {
+    "title": "CPU",
+    "url": "/concepts/cpu"
    }
   }
  ]

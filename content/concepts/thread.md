@@ -27,7 +27,7 @@ but each has its **own** [[call-stack|call stack]].
 
 ## How it works
 
-- The operating system scheduler switches between threads (a context switch) many times a second. On a machine with several CPU cores, threads can also run truly at the same moment.
+- The operating system scheduler switches between threads (a context switch) many times a second. On a machine with several [[cpu|CPU cores]], threads can also run truly at the same moment.
 - Sharing memory makes threads cheap to communicate, and dangerous: two threads changing the same data can interleave in surprising ways (a race condition). Locks prevent that, and bring their own problem (deadlock).
 
 ## In the languages you use
