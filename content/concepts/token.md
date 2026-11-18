@@ -58,5 +58,6 @@ Introduced in [[2026-11-17-tokens|#4 · Tokens and context windows]]. Tokens are
 <!-- leads-to -->
 ## Leads to
 
+- [[byte-pair-encoding|Byte-pair encoding]]: A way to build a tokenizer vocabulary by repeatedly merging the most frequent adjacent pair of pieces, so common text is short and rare text still works.
 - [[context-window|Context window]]: The maximum number of tokens a language model can take in and produce in one request, prompt and reply together.
 <!-- /leads-to -->

@@ -58,7 +58,7 @@ print(has_pair_quadratic([3, 9, 4, 7], 11), has_pair_linear([3, 9, 4, 7], 11))  
 Complexity is not only an interview topic. Two well-known outages came from code whose cost grew much faster than its input:
 
 - **Cloudflare, 2 July 2019.** A new firewall rule contained a regular expression that "backtracked enormously" and
-  pushed [[cpu|CPUs]] serving HTTP traffic to nearly 100% across the network, taking Cloudflare's proxy down for 27 minutes.
+  pushed [[cpu|CPUs]] serving [[http|HTTP]] traffic to nearly 100% across the network, taking Cloudflare's proxy down for 27 minutes.
   The regex engine tried exponentially many ways to match one string.
   ([Cloudflare's postmortem](https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/))
 - **[[call-stack|Stack Overflow]], 20 July 2016.** A post containing about 20,000 consecutive spaces hit a whitespace-trimming

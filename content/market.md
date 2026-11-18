@@ -10,7 +10,7 @@ open-source job scanner, reads the descriptions of new entry-level and new-grad 
 counts the skills they ask for. The terms below are the ones that its owner's skill list doesn't cover yet, so
 everyday skills like Python, JavaScript and SQL are left out on purpose: this is a list of **what to learn next**.
 
-Report date: 2026-11-16. **This wiki covers 12% of this week's top terms.**
+Report date: 2026-11-16. **This wiki covers 16% of this week's top terms.**
 
 ## Last 7 days (1230 job descriptions)
 
@@ -29,7 +29,7 @@ Report date: 2026-11-16. **This wiki covers 12% of this week's top terms.**
 | Kafka | 16 | not yet |
 | Tableau | 15 | not yet |
 | Snowflake | 14 | not yet |
-| Jenkins | 13 | not yet |
+| Jenkins | 13 | [[continuous-integration\|Continuous integration]] |
 | integration testing | 13 | not yet |
 | Airflow | 10 | not yet |
 | Angular | 10 | not yet |
@@ -56,7 +56,7 @@ Report date: 2026-11-16. **This wiki covers 12% of this week's top terms.**
 | Tableau | 60 | not yet |
 | unit testing | 53 | [[unit-testing\|Unit testing]] |
 | Go | 49 | not yet |
-| Jenkins | 45 | not yet |
+| Jenkins | 45 | [[continuous-integration\|Continuous integration]] |
 | Kafka | 41 | not yet |
 | Angular | 38 | not yet |
 | Snowflake | 38 | not yet |

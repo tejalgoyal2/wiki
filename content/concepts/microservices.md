@@ -14,7 +14,7 @@ updated: 2026-11-12
 
 A **monolith** is one application, deployed as one unit, usually with one database. **Microservices** split the
 product into small services (users, payments, notifications), each with **its own data**, deployed **on its own**,
-talking over HTTP/gRPC or a message queue such as Kafka.
+talking over [[http|HTTP]]/gRPC or a message queue such as Kafka.
 
 ## What it buys, and what it costs
 

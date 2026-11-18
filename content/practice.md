@@ -6,7 +6,7 @@ nolink: true
 ---
 
 Every **Check yourself** and **How interviews ask it** question in the wiki, in one place. Say the answer out loud
-or write it down **before** opening it: testing yourself is what makes knowledge stick. 84 questions so far. This page is generated from
+or write it down **before** opening it: testing yourself is what makes knowledge stick. 103 questions so far. This page is generated from
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
@@ -329,6 +329,14 @@ the notes, so it grows every day.
 > [!question]- Why can the same prompt cost different amounts on two models?
 > Their tokenizers differ, so they split the text into a different number of tokens, and their per-token prices differ too.
 
+### From [[byte-pair-encoding|Byte-pair encoding]]
+
+> [!question]- Why does BPE never meet an unknown word?
+> The smallest pieces (characters or bytes) are always in the vocabulary, so any text can be split into known pieces.
+
+> [!question]- Why must merges be replayed in the order they were learned?
+> Each merge was chosen because of the pieces that existed at that point. A later merge may depend on an earlier one, so another order gives a different result.
+
 ## Backend & System Design
 
 ### From [[java|Java]]
@@ -354,6 +362,58 @@ the notes, so it grows every day.
 
 > [!question]- What is the difference between a unit and an integration test?
 > A unit test checks one piece in isolation. An integration test checks that several real pieces work together, such as your code with an actual database.
+
+### From [[2026-11-18-http|#5 · HTTP in depth]]
+
+> [!question]- "What is the difference between PUT and POST?"
+> `PUT` replaces the resource at a URL the client names, and it is idempotent: sending it twice leaves the same state. `POST` hands the server a body to process, usually to create something at a URL the server picks, and it is not idempotent: sending it twice can create two things. So I can retry a `PUT` after a timeout, but a `POST` needs an idempotency key first.
+
+> [!question]- "A payment request timed out. What should the client do?"
+> It does not know whether the payment happened, so it must not just send the request again. The client should send the same idempotency key on every attempt. The server stores the key with the result and returns the stored result for a repeat, so the card is charged once. I would also let the client look up the payment by that key to see its final state.
+
+> [!question]- "What does HTTP/2 fix over HTTP/1.1, and what does it not fix?"
+> It multiplexes many requests as independent streams over one connection, so a slow response no longer blocks the ones behind it, and it compresses headers. It still runs on TCP, so one lost packet stalls every stream until it is resent. HTTP/3 moves to QUIC over UDP so that a loss only delays its own stream.
+
+> [!question]- Why is `DELETE` idempotent even though the second call returns a different status code?
+> Idempotency is about server state, not the response. After the first `DELETE` the item is gone; after the second it is still gone. The response differs (`204` then `404`), but the state is the same.
+
+> [!question]- Your client gets `403` on an API call. Should it retry after a few seconds? What about `503`?
+> No for `403`: the server understood the request and refused it, so retrying the same request gives the same answer. Yes for `503` (with backoff, and respecting `Retry-After`), because it means the server is temporarily unable to handle the request, and the method must be idempotent.
+
+> [!question]- Ten requests go to one HTTPS host with a 50 ms round trip. Roughly how much does keep-alive save compared with a new connection per request?
+> With a new TCP and TLS 1.3 connection each time, each request costs about 3 round trips (150 ms), so 1,500 ms in all. With keep-alive the two handshake round trips are paid once and each request costs one, so about 600 ms. It saves roughly 900 ms in this model.
+
+### From [[continuous-integration|Continuous integration]]
+
+> [!question]- What is the difference between continuous integration and continuous delivery?
+> CI builds and tests every change automatically. Continuous delivery goes further and keeps every passing change ready to release, or releases it automatically.
+
+> [!question]- Why does a pipeline stop at the first failing stage?
+> Later stages assume the earlier ones passed. Deploying code whose tests failed defeats the purpose of the checks, and stopping gives fast feedback.
+
+### From [[http|HTTP]]
+
+> [!question]- What does it mean that HTTP is stateless?
+> Each request carries everything the server needs; the server does not remember earlier requests from the same client. State, such as a login, is carried by the client in cookies or tokens on each request.
+
+> [!question]- What stays the same and what changes between HTTP/1.1 and HTTP/2?
+> The semantics stay: methods, status codes and headers mean the same. The wire format changes from text to binary frames, and many requests can share one connection at once.
+
+### From [[http-status-codes|HTTP status codes]]
+
+> [!question]- What is the difference between 401 and 403?
+> 401: the server does not know who you are, so log in. 403: it knows who you are and the answer is no.
+
+> [!question]- Which of 400, 429 and 503 is worth retrying later?
+> 429 and 503. A 400 means the request itself is wrong, so the same request fails again.
+
+### From [[idempotency|Idempotency]]
+
+> [!question]- A client retries `PUT /users/7` with the same body three times. How many users exist afterwards, and why?
+> One. `PUT` replaces the resource at that URL, so repeating it leaves the same state.
+
+> [!question]- Why does a payment API ask for an idempotency key on `POST`?
+> A timeout leaves the client unsure whether the payment happened. With the same key on every retry, the server charges once and returns the stored result for repeats.
 
 ## CS Fundamentals
 
@@ -382,6 +442,15 @@ the notes, so it grows every day.
 > Concurrency: overlap the waiting. More cores won't help code that is idle.
 
 ### From [[hash-map|Hash map]]
+
+> [!question]- "How does a hash map work, and why is lookup O(1)?"
+> A hash function turns the key into an integer, and that integer modulo the array size picks a slot, so the lookup jumps straight there without searching. Collisions are handled by chaining or probing, and the table is resized when it gets too full, which keeps chains and probe sequences short. So the average cost is constant. The worst case is O(n) if everything collides.
+
+> [!question]- "What makes a good key, and what makes a bad one?"
+> A good key is immutable, hashable, cheap to hash, and has equality consistent with its hash. A bad key is mutable (its hash could change while stored), expensive to hash (a huge string), or has equal objects with different hashes.
+
+> [!question]- "When would you not use a hash map?"
+> When you need keys in sorted order, range queries, or the next larger key. A sorted array or a tree is better. Also when memory is tight, since a hash map keeps extra empty slots to stay fast.
 
 > [!question]- Why is a dict lookup O(1) on average but O(n) in the worst case?
 > The hash picks the slot directly. If many keys collide in the same slot, the lookup has to walk through all of them.

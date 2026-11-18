@@ -71,3 +71,9 @@ Tests around code that calls a language model keep the model behind a stub; see 
 
 > [!question]- What is the difference between a unit and an integration test?
 > A unit test checks one piece in isolation. An integration test checks that several real pieces work together, such as your code with an actual database.
+
+<!-- leads-to -->
+## Leads to
+
+- [[continuous-integration|Continuous integration]]: Automatically building and testing the code on every push so that broken changes are caught within minutes; CI/CD adds automatic delivery to users.
+<!-- /leads-to -->

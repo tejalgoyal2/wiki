@@ -221,7 +221,7 @@ Today: [[contains-duplicate|Contains Duplicate]]. Yesterday's [[two-sum|Two Sum]
 ## Market word: microservices
 
 In 46 of 1,200 Canadian entry-level job posts this week. It means building one product as several small services that
-each own one job and their own data (users, payments, notifications), deploy on their own, and talk over HTTP or a
+each own one job and their own data (users, payments, notifications), deploy on their own, and talk over [[http|HTTP]] or a
 message queue such as Kafka. Companies want it because large teams can ship and scale parts independently, at the cost
 of network calls, harder debugging and data spread across services. A FastAPI backend and a Next.js frontend talking
 over HTTP are already two services; Docker is how each one is usually packaged. Lesson 35 covers [[microservices|monolith]] vs

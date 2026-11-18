@@ -272,6 +272,6 @@ In 24 of 1,200 Canadian entry-level job posts this week. A distributed system is
 machines that cooperate over a network, such as a database replicated across three servers or a payment service
 running on twenty containers. Job posts ask for it because almost every backend at scale is one, and it brings
 problems a single machine does not have: messages that arrive late or never, machines that fail halfway through,
-and copies of data that disagree. If you have called one service from another over HTTP and had to decide what to do
+and copies of data that disagree. If you have called one service from another over [[http|HTTP]] and had to decide what to do
 when it timed out, you have already met the central problem. [[microservices|Microservices]] are one way of building a distributed
 system, which is why the two terms show up in the same posts.

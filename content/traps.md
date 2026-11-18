@@ -284,6 +284,12 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - **Letter-level tasks.** "How many r's in strawberry?" asks about characters, but the model sees a few chunks. Do exact string work in code.
 - **Numbers.** Long numbers are split into chunks in tokenizer-specific ways, which is one reason arithmetic on long numbers is unreliable.
 
+### [[byte-pair-encoding|Byte-pair encoding]]
+
+- The merge order is part of the tokenizer. Replaying merges in a different order gives different tokens.
+- A vocabulary learned on English splits other languages and code into more pieces, so the same meaning costs more tokens.
+- BPE is not the only method. WordPiece and the Unigram model (SentencePiece) also build subword vocabularies.
+
 ### [[context-window|Context window]]
 
 - Forgetting to reserve room for the reply.
@@ -298,6 +304,44 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - Because the model sees chunks, not letters, letter-level tasks (count the r's, reverse a word) are unreliable. Do them in code.
 
 ## Backend & System Design
+
+### [[2026-11-18-http|#5 · HTTP in depth]]
+
+- **Using GET to change things.** Crawlers, link previewers and browsers prefetch GET URLs. A "delete" link that is a GET will eventually be clicked by a robot.
+- **Retrying POST blindly.** A timeout does not mean failure. Use an idempotency key, or make the operation idempotent.
+- **Returning 200 with an error in the body.** Clients, proxies and monitoring read the status code. Use the right one.
+- **Mixing up 401 and 403.** 401 is about identity, 403 is about permission.
+- **Forgetting `Content-Length`** on a keep-alive connection. The client cannot tell where the response ends, so it hangs or the server has to close the connection.
+- **"HTTP/2 is always faster".** It helps with many small requests. On a lossy network the shared TCP connection can be slower than several separate ones.
+- **Treating the reason phrase as data.** `404 Not Found` and `404 Nope` are the same response. Only the number counts (and HTTP/2 drops the phrase entirely).
+
+### [[continuous-integration|Continuous integration]]
+
+- Merging only once a week is not integration. Small, frequent changes keep conflicts small.
+- A flaky test is worse than none: people stop trusting the signal.
+- Secrets in pipeline files leak. Use the tool's secret store.
+- "Passes on my machine" is why CI builds in a clean environment.
+
+### [[http|HTTP]]
+
+- Statelessness does not mean no state: cookies and [[token|tokens]] carry state with each request.
+- A `GET` must not change data. Robots and prefetchers send `GET` freely.
+- The status code is the contract. A `200` with an error message in the body hides failures from clients and monitoring.
+- Versions change performance, not meaning. Code written against methods and status codes works on all three.
+
+### [[http-status-codes|HTTP status codes]]
+
+- `200` with `{"error": ...}` in the body fools every tool that reads the status.
+- `401` is the confusing name: it really means unauthenticated.
+- Do not return `500` for bad input; that is a `4xx`. Do not return `404` to hide a permission problem unless you mean to.
+- Redirect codes differ on whether a `POST` becomes a `GET` when followed (301 and 302 may; 307 and 308 do not).
+
+### [[idempotency|Idempotency]]
+
+- Idempotent does not mean safe. `DELETE` changes state; it is just fine to repeat.
+- "Append" and "increment" are not idempotent. "Set to this value" is.
+- Check-then-act without a unique constraint races: two retries at once can both pass the check. Enforce the key with a unique index.
+- Storing the key forever costs space; storing it too briefly allows duplicates after a long outage.
 
 ### [[unit-testing|Unit testing]]
 

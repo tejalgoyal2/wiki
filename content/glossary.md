@@ -41,6 +41,7 @@ This page is generated from the notes themselves, so it is always complete.
 
 | Term | In one line |
 |---|---|
+| [[byte-pair-encoding\|Byte-pair encoding]] | A way to build a tokenizer vocabulary by repeatedly merging the most frequent adjacent pair of pieces, so common text is short and rare text still works. |
 | [[context-window\|Context window]] | The maximum number of tokens a language model can take in and produce in one request, prompt and reply together. |
 | [[token\|Token]] | A piece of text, mapped to an integer, that a language model reads and writes instead of letters or words. |
 
@@ -48,6 +49,10 @@ This page is generated from the notes themselves, so it is always complete.
 
 | Term | In one line |
 |---|---|
+| [[continuous-integration\|Continuous integration]] | Automatically building and testing the code on every push so that broken changes are caught within minutes; CI/CD adds automatic delivery to users. |
+| [[http\|HTTP]] | The request-and-response protocol that browsers, apps and APIs use to talk to servers, built from a method, a target, headers, a status code and an optional body. |
+| [[http-status-codes\|HTTP status codes]] | The three-digit number in an HTTP response that tells the client what happened, grouped by the first digit into success, redirect, client error and server error. |
+| [[idempotency\|Idempotency]] | An operation is idempotent if doing it many times leaves the system in the same state as doing it once, which is what makes retries safe. |
 | [[java\|Java]] | A statically typed, object-oriented language that compiles to bytecode for the JVM. Heavily used in banks and large companies. |
 | [[microservices\|Microservices]] | Building one product as several small services that each own one job and their own data, and talk over the network. |
 | [[unit-testing\|Unit testing]] | Checking one small piece of code, such as a function, on its own with fixed inputs and expected outputs, run automatically on every change. |

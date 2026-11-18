@@ -680,6 +680,28 @@
    }
   },
   {
+   "id": "b3e77j",
+   "track": "llm-rag",
+   "kind": "check",
+   "q": "Why does BPE never meet an unknown word?",
+   "a": "The smallest pieces (characters or bytes) are always in the vocabulary, so any text can be split into known pieces.",
+   "from": {
+    "title": "Byte-pair encoding",
+    "url": "/concepts/byte-pair-encoding"
+   }
+  },
+  {
+   "id": "rfrbmq",
+   "track": "llm-rag",
+   "kind": "check",
+   "q": "Why must merges be replayed in the order they were learned?",
+   "a": "Each merge was chosen because of the pieces that existed at that point. A later merge may depend on an earlier one, so another order gives a different result.",
+   "from": {
+    "title": "Byte-pair encoding",
+    "url": "/concepts/byte-pair-encoding"
+   }
+  },
+  {
    "id": "1pbdr28",
    "track": "backend",
    "kind": "check",
@@ -746,6 +768,160 @@
    }
   },
   {
+   "id": "h4xjfe",
+   "track": "backend",
+   "kind": "interview",
+   "q": "What is the difference between PUT and POST?",
+   "a": "`PUT` replaces the resource at a URL the client names, and it is idempotent: sending it twice leaves the same state. `POST` hands the server a body to process, usually to create something at a URL the server picks, and it is not idempotent: sending it twice can create two things. So I can retry a `PUT` after a timeout, but a `POST` needs an idempotency key first.",
+   "from": {
+    "title": "#5 · HTTP in depth",
+    "url": "/lessons/2026-11-18-http"
+   }
+  },
+  {
+   "id": "outpdd",
+   "track": "backend",
+   "kind": "interview",
+   "q": "A payment request timed out. What should the client do?",
+   "a": "It does not know whether the payment happened, so it must not just send the request again. The client should send the same idempotency key on every attempt. The server stores the key with the result and returns the stored result for a repeat, so the card is charged once. I would also let the client look up the payment by that key to see its final state.",
+   "from": {
+    "title": "#5 · HTTP in depth",
+    "url": "/lessons/2026-11-18-http"
+   }
+  },
+  {
+   "id": "8m7e91",
+   "track": "backend",
+   "kind": "interview",
+   "q": "What does HTTP/2 fix over HTTP/1.1, and what does it not fix?",
+   "a": "It multiplexes many requests as independent streams over one connection, so a slow response no longer blocks the ones behind it, and it compresses headers. It still runs on TCP, so one lost packet stalls every stream until it is resent. HTTP/3 moves to QUIC over UDP so that a loss only delays its own stream.",
+   "from": {
+    "title": "#5 · HTTP in depth",
+    "url": "/lessons/2026-11-18-http"
+   }
+  },
+  {
+   "id": "127zkji",
+   "track": "backend",
+   "kind": "check",
+   "q": "Why is `DELETE` idempotent even though the second call returns a different status code?",
+   "a": "Idempotency is about server state, not the response. After the first `DELETE` the item is gone; after the second it is still gone. The response differs (`204` then `404`), but the state is the same.",
+   "from": {
+    "title": "#5 · HTTP in depth",
+    "url": "/lessons/2026-11-18-http"
+   }
+  },
+  {
+   "id": "1ibbwpy",
+   "track": "backend",
+   "kind": "check",
+   "q": "Your client gets `403` on an API call. Should it retry after a few seconds? What about `503`?",
+   "a": "No for `403`: the server understood the request and refused it, so retrying the same request gives the same answer. Yes for `503` (with backoff, and respecting `Retry-After`), because it means the server is temporarily unable to handle the request, and the method must be idempotent.",
+   "from": {
+    "title": "#5 · HTTP in depth",
+    "url": "/lessons/2026-11-18-http"
+   }
+  },
+  {
+   "id": "1sbnnc0",
+   "track": "backend",
+   "kind": "check",
+   "q": "Ten requests go to one HTTPS host with a 50 ms round trip. Roughly how much does keep-alive save compared with a new connection per request?",
+   "a": "With a new TCP and TLS 1.3 connection each time, each request costs about 3 round trips (150 ms), so 1,500 ms in all. With keep-alive the two handshake round trips are paid once and each request costs one, so about 600 ms. It saves roughly 900 ms in this model.",
+   "from": {
+    "title": "#5 · HTTP in depth",
+    "url": "/lessons/2026-11-18-http"
+   }
+  },
+  {
+   "id": "12fr71f",
+   "track": "backend",
+   "kind": "check",
+   "q": "What is the difference between continuous integration and continuous delivery?",
+   "a": "CI builds and tests every change automatically. Continuous delivery goes further and keeps every passing change ready to release, or releases it automatically.",
+   "from": {
+    "title": "Continuous integration",
+    "url": "/concepts/continuous-integration"
+   }
+  },
+  {
+   "id": "11mae3w",
+   "track": "backend",
+   "kind": "check",
+   "q": "Why does a pipeline stop at the first failing stage?",
+   "a": "Later stages assume the earlier ones passed. Deploying code whose tests failed defeats the purpose of the checks, and stopping gives fast feedback.",
+   "from": {
+    "title": "Continuous integration",
+    "url": "/concepts/continuous-integration"
+   }
+  },
+  {
+   "id": "51bdpw",
+   "track": "backend",
+   "kind": "check",
+   "q": "What does it mean that HTTP is stateless?",
+   "a": "Each request carries everything the server needs; the server does not remember earlier requests from the same client. State, such as a login, is carried by the client in cookies or tokens on each request.",
+   "from": {
+    "title": "HTTP",
+    "url": "/concepts/http"
+   }
+  },
+  {
+   "id": "5i7zc6",
+   "track": "backend",
+   "kind": "check",
+   "q": "What stays the same and what changes between HTTP/1.1 and HTTP/2?",
+   "a": "The semantics stay: methods, status codes and headers mean the same. The wire format changes from text to binary frames, and many requests can share one connection at once.",
+   "from": {
+    "title": "HTTP",
+    "url": "/concepts/http"
+   }
+  },
+  {
+   "id": "fcqrqj",
+   "track": "backend",
+   "kind": "check",
+   "q": "What is the difference between 401 and 403?",
+   "a": "401: the server does not know who you are, so log in. 403: it knows who you are and the answer is no.",
+   "from": {
+    "title": "HTTP status codes",
+    "url": "/concepts/http-status-codes"
+   }
+  },
+  {
+   "id": "197dk5w",
+   "track": "backend",
+   "kind": "check",
+   "q": "Which of 400, 429 and 503 is worth retrying later?",
+   "a": "429 and 503. A 400 means the request itself is wrong, so the same request fails again.",
+   "from": {
+    "title": "HTTP status codes",
+    "url": "/concepts/http-status-codes"
+   }
+  },
+  {
+   "id": "nqieo6",
+   "track": "backend",
+   "kind": "check",
+   "q": "A client retries `PUT /users/7` with the same body three times. How many users exist afterwards, and why?",
+   "a": "One. `PUT` replaces the resource at that URL, so repeating it leaves the same state.",
+   "from": {
+    "title": "Idempotency",
+    "url": "/concepts/idempotency"
+   }
+  },
+  {
+   "id": "jpg421",
+   "track": "backend",
+   "kind": "check",
+   "q": "Why does a payment API ask for an idempotency key on `POST`?",
+   "a": "A timeout leaves the client unsure whether the payment happened. With the same key on every retry, the server charges once and returns the stored result for repeats.",
+   "from": {
+    "title": "Idempotency",
+    "url": "/concepts/idempotency"
+   }
+  },
+  {
    "id": "m160j9",
    "track": "cs-fundamentals",
    "kind": "check",
@@ -809,6 +985,39 @@
    "from": {
     "title": "Concurrency vs parallelism",
     "url": "/concepts/concurrency-vs-parallelism"
+   }
+  },
+  {
+   "id": "82s6pm",
+   "track": "cs-fundamentals",
+   "kind": "interview",
+   "q": "How does a hash map work, and why is lookup O(1)?",
+   "a": "A hash function turns the key into an integer, and that integer modulo the array size picks a slot, so the lookup jumps straight there without searching. Collisions are handled by chaining or probing, and the table is resized when it gets too full, which keeps chains and probe sequences short. So the average cost is constant. The worst case is O(n) if everything collides.",
+   "from": {
+    "title": "Hash map",
+    "url": "/concepts/hash-map"
+   }
+  },
+  {
+   "id": "ow48n3",
+   "track": "cs-fundamentals",
+   "kind": "interview",
+   "q": "What makes a good key, and what makes a bad one?",
+   "a": "A good key is immutable, hashable, cheap to hash, and has equality consistent with its hash. A bad key is mutable (its hash could change while stored), expensive to hash (a huge string), or has equal objects with different hashes.",
+   "from": {
+    "title": "Hash map",
+    "url": "/concepts/hash-map"
+   }
+  },
+  {
+   "id": "1cfk5ds",
+   "track": "cs-fundamentals",
+   "kind": "interview",
+   "q": "When would you not use a hash map?",
+   "a": "When you need keys in sorted order, range queries, or the next larger key. A sorted array or a tree is better. Also when memory is tight, since a hash map keeps extra empty slots to stay fast.",
+   "from": {
+    "title": "Hash map",
+    "url": "/concepts/hash-map"
    }
   },
   {
