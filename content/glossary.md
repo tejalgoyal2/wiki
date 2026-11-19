@@ -55,17 +55,22 @@ This page is generated from the notes themselves, so it is always complete.
 | [[idempotency\|Idempotency]] | An operation is idempotent if doing it many times leaves the system in the same state as doing it once, which is what makes retries safe. |
 | [[java\|Java]] | A statically typed, object-oriented language that compiles to bytecode for the JVM. Heavily used in banks and large companies. |
 | [[microservices\|Microservices]] | Building one product as several small services that each own one job and their own data, and talk over the network. |
+| [[tcp\|TCP]] | The transport protocol that turns unreliable network packets into a reliable, ordered stream of bytes between two programs; HTTP/1.1 and HTTP/2 run on top of it. |
+| [[tls\|TLS]] | The protocol that encrypts a connection and proves the server's identity with a certificate; it is the S in HTTPS. |
 | [[unit-testing\|Unit testing]] | Checking one small piece of code, such as a function, on its own with fixed inputs and expected outputs, run automatically on every change. |
 
 ## CS Fundamentals
 
 | Term | In one line |
 |---|---|
+| [[amortized-analysis\|Amortized analysis]] | Measuring the cost of an operation averaged over any sequence of operations, so a rare expensive step (like a resize) still counts as cheap per call. |
 | [[b-tree\|B-tree]] | A balanced search tree with many keys per node, used for database indexes because it finds a key in very few disk reads. |
 | [[big-o-notation\|Big-O notation]] | A way to say how an algorithm's time or memory grows as the input grows, ignoring constants. |
+| [[bucket-sort\|Bucket sort (pattern)]] | When the values you would sort by are small whole numbers, use them as list indexes ("buckets") and read the buckets in order, which costs O(n) instead of O(n log n). |
 | [[call-stack\|Call stack]] | The list of functions currently running, newest on top. A function's frame is pushed when it is called and popped when it returns. |
 | [[concurrency-vs-parallelism\|Concurrency vs parallelism]] | Concurrency is dealing with many things in progress at once; parallelism is doing many things at the same instant. |
 | [[cpu\|CPU]] | The chip that executes a program's instructions one after another; it has cores, registers and caches, and its speed depends heavily on how fast data reaches it. |
+| [[dynamic-array\|Dynamic array]] | An array that grows on demand by moving into a larger block of memory when full; Python's list, JavaScript's Array and Java's ArrayList work this way. |
 | [[hash-map\|Hash map]] | A key-value store that finds any key in O(1) time on average by turning the key into an array position with a hash function. |
 | [[hash-map-lookup\|Hash map lookup (pattern)]] | Walk the input once and remember what you've seen in a hash map or set, so each "have I seen X?" question costs O(1). |
 | [[thread\|Thread]] | A sequence of instructions the operating system can schedule. Threads in one process share memory; each has its own call stack. |

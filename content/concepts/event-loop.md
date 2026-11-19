@@ -132,7 +132,7 @@ Node.js uses the same idea with named **phases**, each with its own queue of cal
 | Phase | What runs |
 |---|---|
 | timers | Callbacks of `setTimeout` and `setInterval` whose time has come |
-| pending callbacks | Some deferred system callbacks, such as certain TCP errors |
+| pending callbacks | Some deferred system callbacks, such as certain [[tcp\|TCP]] errors |
 | idle, prepare | Internal use only |
 | poll | New I/O events; Node may wait here when there is nothing else to do |
 | check | `setImmediate` callbacks |

@@ -19,7 +19,7 @@ updated: 2026-11-18
 > [[idempotency|Idempotency]]
 <!-- /read-first -->
 
-**HTTP** (HyperText Transfer Protocol) is how a client asks a server for something and gets an answer. The client sends a **request**, the server sends one **response**, and the exchange ends. The server keeps no memory of the client between exchanges, so HTTP is **stateless**. HTTPS is HTTP carried inside an encrypted TLS connection.
+**HTTP** (HyperText Transfer Protocol) is how a client asks a server for something and gets an answer. The client sends a **request**, the server sends one **response**, and the exchange ends. The server keeps no memory of the client between exchanges, so HTTP is **stateless**. HTTPS is HTTP carried inside an encrypted [[tls|TLS]] connection.
 
 ## How it works
 
@@ -42,7 +42,7 @@ The meaning of methods, status codes and headers is defined once, in RFC 9110, a
 | Version | Wire format | Parallel requests on one connection |
 |---|---|---|
 | HTTP/1.1 (RFC 9112) | Text | No: responses come back in order |
-| HTTP/2 (RFC 9113) | Binary frames in streams, compressed headers | Yes, over one TCP connection |
+| HTTP/2 (RFC 9113) | Binary frames in streams, compressed headers | Yes, over one [[tcp\|TCP]] connection |
 | HTTP/3 (RFC 9114) | Binary frames over QUIC | Yes, and a lost packet only delays its own stream |
 
 HTTP/1.1 keeps a connection open by default (**keep-alive**), so the cost of the TCP and TLS handshakes is paid once, not for every request.

@@ -6,7 +6,7 @@ nolink: true
 ---
 
 Every **Check yourself** and **How interviews ask it** question in the wiki, in one place. Say the answer out loud
-or write it down **before** opening it: testing yourself is what makes knowledge stick. 103 questions so far. This page is generated from
+or write it down **before** opening it: testing yourself is what makes knowledge stick. 119 questions so far. This page is generated from
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
@@ -415,6 +415,24 @@ the notes, so it grows every day.
 > [!question]- Why does a payment API ask for an idempotency key on `POST`?
 > A timeout leaves the client unsure whether the payment happened. With the same key on every retry, the server charges once and returns the stored result for repeats.
 
+### From [[tcp|TCP]]
+
+> [!question]- How many round trips does a TCP connection cost before the first byte of data can be sent?
+> One: the `SYN` / `SYN-ACK` exchange. The client's final `ACK` can travel together with its first data.
+
+> [!question]- Your server reads `recv(1024)` once and parses the result as one JSON message. Why does it fail sometimes?
+> TCP does not keep message boundaries. A read can return half a message, or two messages glued together. Add framing,
+> such as a length prefix, and read until the whole message has arrived.
+
+### From [[tls|TLS]]
+
+> [!question]- What three guarantees does TLS add on top of TCP?
+> Confidentiality (encryption), integrity (tampering is detected) and server authentication (a certificate that
+> chains to a trusted authority and matches the host name).
+
+> [!question]- How many round trips does a fresh HTTPS request over TLS 1.3 take, from nothing to the response?
+> About three: one for the TCP handshake, one for the TLS handshake, and one for the request and response.
+
 ## CS Fundamentals
 
 ### From [[big-o-notation|Big-O notation]]
@@ -424,6 +442,13 @@ the notes, so it grows every day.
 
 > [!question]- Why do we drop constants, so that 5n and n are both O(n)?
 > Big-O describes growth. As n gets large, the shape of the curve dominates; constants depend on hardware and details.
+
+> [!question]- Binary search halves the range each step. Why does it not matter whether we write O(log₂ n) or O(log n)?
+> Logarithms in different bases differ by a constant factor (log₂ n is about 3.32 × log₁₀ n), and Big-O drops constant factors.
+
+> [!question]- An algorithm loops from 2 up to √n to test whether the number n is prime. Is it fast?
+> Only for small numbers. Input size is the number of digits d, and √n is about 10^(d/2), so the cost is exponential
+> in the input size. A 30-digit number would need about 10¹⁵ divisions.
 
 ### From [[call-stack|Call stack]]
 
@@ -490,3 +515,42 @@ the notes, so it grows every day.
 
 > [!question]- Why can scanning an array be faster than scanning a linked list of the same length?
 > Array elements sit next to each other, so each cache load brings in several of them. Linked nodes are scattered, so more reads go to slow main memory.
+
+### From [[2026-11-19-big-o-for-real|#6 · Big-O for real]]
+
+> [!question]- "What is the time and space complexity of your solution?" (asked after nearly every coding question)
+> Answer both, and name the variables. For example: "O(n) time, because I make one pass and each set operation is O(1) on average. O(n) extra space, for the set, in the worst case when every item is distinct. The output list does not count as extra space." If there is a sort, say O(n log n) and name which step dominates. If it is recursive, give the stack depth as part of the space.
+
+> [!question]- "Why is appending to a dynamic array O(1) if it sometimes has to copy everything?"
+> Because the capacity grows by a constant factor. With doubling, appending n items triggers copies of 1, 2, 4, up to n/2 items, which sum to less than n. So n appends do less than 2n work in total, which is O(1) per append amortized. If it grew by a fixed number of slots instead, the copies would sum to about n²/2 and append would be O(n). A single append can still be O(n); amortized is a bound over the whole sequence.
+
+> [!question]- "Can you do better?" (about an O(n²) solution)
+> First check what the input size allows: with n up to 10⁵, O(n²) is about 10¹⁰ steps, too slow, so O(n log n) or O(n) is expected. Then look for repeated work: an inner loop that searches can usually become a hash lookup; an inner loop that sums a range can use a precomputed running total; sorting first can unlock two pointers or binary search. Say the trade-off out loud: most speedups spend O(n) memory to save time.
+
+> [!question]- What is the complexity of `for x in a: if x in b: count += 1`, with `len(a) = n` and `b` a list of size m? What if `b` is a set?
+> With a list, each `in` scans up to m items, so O(n · m). With a set, each `in` is O(1) on average, so O(n), plus O(m) once to build the set if you have to make it.
+
+> [!question]- A list's capacity grows by 1.125 times each time it fills, not 2 times. Is `append` still amortized O(1)?
+> Yes. Any constant growth factor above 1 makes the copy sizes a geometric series, whose sum is a constant multiple of n. A smaller factor means more frequent copies (a bigger constant) but less wasted memory. Only growing by a fixed number of slots breaks it, giving O(n) per append.
+
+> [!question]- A recursive function visits each of n items once and creates no lists. What is its space complexity, and what happens in Python at n = 50,000?
+> O(n) for the call stack, because n frames are waiting at the deepest point. In Python it raises `RecursionError` long before that, since the default limit is 1,000 frames. Rewrite it as a loop.
+
+### From [[amortized-analysis|Amortized analysis]]
+
+> [!question]- A list grows by 50% each time it fills. Is append amortized O(1)?
+> Yes. Any constant growth factor above 1 makes the copy sizes a geometric series whose sum is a constant times n.
+
+> [!question]- What is the difference between "O(1) average" and "O(1) amortized"?
+> Average is over likely inputs and can be broken by bad inputs. Amortized is a guarantee over any sequence of
+> operations: the total for n operations is O(n), even if individual operations vary.
+
+### From [[dynamic-array|Dynamic array]]
+
+> [!question]- Why is `append` O(1) amortized but `insert(0, x)` O(n) on a Python list?
+> Append writes into spare capacity at the end and only occasionally resizes, which averages out to O(1). Inserting at
+> the front must shift every existing item one slot to the right, every time.
+
+> [!question]- Why does a dynamic array grow by a factor rather than by, say, 100 slots?
+> Growing by a fixed amount means a full copy every 100 appends, so n appends copy about n²/200 items: O(n) per append.
+> A factor makes the copies a geometric series that sums to O(n) total.

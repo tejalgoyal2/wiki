@@ -343,6 +343,23 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - Check-then-act without a unique constraint races: two retries at once can both pass the check. Enforce the key with a unique index.
 - Storing the key forever costs space; storing it too briefly allows duplicates after a long outage.
 
+### [[tcp|TCP]]
+
+- **Assuming one `send` equals one `recv`.** Reads can return part of a message or several messages. Always frame.
+- **Reliable does not mean delivered.** TCP retries, but if the connection breaks, data in flight is lost and the
+  sender may not know whether the other side processed it. That is why [[idempotency|idempotency]] matters.
+- **Head-of-line blocking.** Because bytes are delivered in order, one lost packet stalls everything behind it on that
+  connection. HTTP/3 moves to QUIC over UDP partly for this reason.
+
+### [[tls|TLS]]
+
+- **Turning verification off** (`verify=False` in `requests`, `CERT_NONE`) to make an error go away. The connection
+  is still encrypted, but to whoever answered, which is exactly what TLS is meant to stop.
+- **Expired certificates** are a common cause of outages. Automate renewal (for example with ACME and Let's Encrypt)
+  and monitor expiry dates.
+- **Encryption is not authorization.** TLS proves who the server is; it says nothing about whether the user may do
+  what they ask.
+
 ### [[unit-testing|Unit testing]]
 
 - Testing implementation details (which helper was called) instead of behaviour. The test then breaks on every refactor.
@@ -352,6 +369,26 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 
 ## CS Fundamentals
 
+### [[2026-11-19-big-o-for-real|#6 · Big-O for real]]
+
+- **"One loop means O(n)."** Only if the body is O(1). A slice, `in` on a list, `sorted`, `pop(0)` or `str.replace` inside the loop multiplies.
+- **Building a string or list with `+` in a loop.** Each `+` copies everything so far: O(n²) in principle. CPython can sometimes extend a string in place, but do not rely on it; use `"".join(parts)` or `list.append`. `sum(list_of_lists, [])` is quadratic for the same reason.
+- **Forgetting the stack.** A recursive solution with "no extra data structures" is still O(depth) space, and in Python it fails past about 1,000 levels.
+- **Treating amortized as worst case.** Amortized O(1) means one call can still be O(n). That is fine for throughput and not fine for strict latency.
+- **Calling hash lookups O(1) without the word "average".** The worst case is O(n) when keys collide.
+- **Merging two different sizes into one n.** Two nested loops over lists of size n and m are O(n · m). If m is always 26, that is O(n).
+- **Optimizing the wrong part.** An O(n log n) sort before an O(n²) loop does not matter; the loop does. Find the dominant term first.
+
+### [[amortized-analysis|Amortized analysis]]
+
+- **Amortized is not average case.** Average case assumes typical inputs. Amortized holds for every sequence of
+  operations, even adversarial ones. A [[hash-map|hash map]] lookup is O(1) on *average*; its resize cost is O(1)
+  *amortized*.
+- **One call can still be slow.** If every single operation must finish within a deadline (audio, games, a tight
+  latency target), amortized O(1) is not enough.
+- **Shrinking needs care.** If an array halves as soon as it is half empty, alternating append and pop at that
+  boundary resizes every time. Implementations shrink later (for example at a quarter full).
+
 ### [[b-tree|B-tree]]
 
 - An index speeds reads but slows writes, since each insert must also update the tree.
@@ -359,11 +396,31 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - A multi-column index is ordered by its first column first; a query on only the second column cannot use it well.
 - Random keys (such as random UUIDs) spread inserts over the whole tree and cause more page splits than increasing keys.
 
+### [[big-o-notation|Big-O notation]]
+
+- **Counting lines instead of work.** `x in items`, slicing, `sorted`, `pop(0)` and `+` on lists are each one line
+  and O(n) or more.
+- **Ignoring constants when n is small.** For n = 20, an O(n²) loop over a list can beat an O(n) solution that builds
+  a dict. Big-O is about growth, not about which is faster today.
+- **Forgetting the call stack.** Recursion n levels deep is O(n) space even without any data structure.
+- **Dropping a variable that matters.** O(n + m) is not O(n) if m can be much larger than n.
+- **Saying O(1) for a hash lookup without "average".** Its worst case is O(n).
+
 ### [[cpu|CPU]]
 
 - More threads than cores does not add speed for CPU-bound work. In CPython, the [[gil|GIL]] also stops threads running Python code in parallel; use processes for CPU-bound work.
 - A program waiting on disk or network leaves the CPU idle. That is I/O-bound work, and threads or async help there.
 - Big-O ignores the cache. Two O(n) loops can differ a lot in real time.
+
+### [[dynamic-array|Dynamic array]]
+
+- **`list.pop(0)` and `list.insert(0, x)` are O(n).** For a queue, use `collections.deque`, which is O(1) at both ends.
+- **Pre-sizing is rarely needed in Python.** `[None] * n` is fine when you know n, but appending in a loop is already
+  amortized O(1).
+- **References, not values.** A Python list stores pointers to objects, so `getsizeof` counts the slots, not the
+  objects they point at.
+- **Memory can stay high.** A list that grew to a million items and was then mostly cleared with `pop()` keeps some
+  of its capacity until it shrinks or is rebuilt.
 
 ### [[hash-map|Hash map]]
 
