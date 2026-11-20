@@ -196,6 +196,39 @@
    }
   },
   {
+   "id": "1hxsh25",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "Implement `Promise.all`.",
+   "a": "Return a new promise. Keep a results array the size of the input and a counter of how many are still pending. For\neach item, call `Promise.resolve(item).then(...)`: store the value at its **index** (so the order matches the\ninput, not the finish order), decrement the counter, and resolve with the array when it reaches zero. Pass the\nouter `reject` as the rejection handler, so the first failure rejects the whole thing. Handle the empty input by\nresolving with `[]` at once. Calling `reject` again for later failures is harmless, because a promise settles only\nonce.",
+   "from": {
+    "title": "Promise",
+    "url": "/concepts/promise"
+   }
+  },
+  {
+   "id": "17kajmk",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "What is the difference between `.then(f, g)` and `.then(f).catch(g)`?",
+   "a": "In the first, `g` handles only a rejection of the original promise; if `f` throws, `g` does not see it. In the\nsecond, `.catch(g)` is attached to the promise returned by `.then(f)`, so it handles both a rejection of the\noriginal and an error thrown by `f`. The second is usually what you want.",
+   "from": {
+    "title": "Promise",
+    "url": "/concepts/promise"
+   }
+  },
+  {
+   "id": "1v4mr98",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "You need to call an API for 1,000 ids. How do you do it?",
+   "a": "Not one at a time (too slow) and not all 1,000 at once with `Promise.all` (it can overload the server or hit rate\nlimits, and one failure rejects everything). Run them with a concurrency limit, for example a pool of 5 to 10\nworkers that each take the next id from a shared list, and collect results with `allSettled`-style records so\nfailures can be retried. Add a timeout and retries with backoff for idempotent requests.",
+   "from": {
+    "title": "Promise",
+    "url": "/concepts/promise"
+   }
+  },
+  {
    "id": "1kgfmuk",
    "track": "javascript",
    "kind": "check",
@@ -212,6 +245,28 @@
    "kind": "check",
    "q": "You need results from five requests, but one failing should not lose the other four. Which method?",
    "a": "`Promise.allSettled`.",
+   "from": {
+    "title": "Promise",
+    "url": "/concepts/promise"
+   }
+  },
+  {
+   "id": "173yo6p",
+   "track": "javascript",
+   "kind": "check",
+   "q": "A `.catch` handler logs the error and returns nothing. Is the promise after it fulfilled or rejected?",
+   "a": "Fulfilled, with `undefined`. A handler that returns normally recovers the chain. Rethrow if the error should keep\npropagating.",
+   "from": {
+    "title": "Promise",
+    "url": "/concepts/promise"
+   }
+  },
+  {
+   "id": "ox99b8",
+   "track": "javascript",
+   "kind": "check",
+   "q": "`Promise.race([fetchA(), timeout(1000)])` rejects with the timeout. Is the request stopped?",
+   "a": "No. `race` only decides which result you see; the request keeps running. Pass an `AbortController` signal to the\nrequest and abort it on timeout to really stop it.",
    "from": {
     "title": "Promise",
     "url": "/concepts/promise"
@@ -259,6 +314,160 @@
    "from": {
     "title": "Web Worker",
     "url": "/concepts/web-worker"
+   }
+  },
+  {
+   "id": "1acziaj",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "What is a closure? Give an example of where you would use one.",
+   "a": "A closure is a function together with the variables from the scope where it was created. It can keep using them after that scope has returned. Mechanically, the function object stores a reference to its creating environment, and each call of the function gets that environment as its outer scope. Uses: private state (a counter or a module that exposes only some functions), function factories (`makeAdder(5)`), callbacks and event handlers that need context, and helpers like `once`, `memoize` and `debounce` that keep state between calls.",
+   "from": {
+    "title": "#7 · Closures and scope",
+    "url": "/lessons/2026-11-20-closures-and-scope"
+   }
+  },
+  {
+   "id": "1wcigfa",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "What does this print: `for (var i = 0; i < 3; i++) setTimeout(() => console.log(i))`? How do you fix it?",
+   "a": "`3 3 3`. `var` makes one function-scoped `i`, every callback closes over that same variable, and the callbacks run after the loop has finished, when `i` is 3. Fix it with `let`, which creates a new binding per iteration, so it prints `0 1 2`. Older fixes: wrap the body in an immediately invoked function that takes `i` as a parameter, or pass `i` as the third argument to `setTimeout`. All of them give each callback its own variable.",
+   "from": {
+    "title": "#7 · Closures and scope",
+    "url": "/lessons/2026-11-20-closures-and-scope"
+   }
+  },
+  {
+   "id": "p4fvfc",
+   "track": "javascript",
+   "kind": "interview",
+   "q": "What is the difference between `var`, `let` and `const`? What is hoisting?",
+   "a": "`var` is function-scoped, can be redeclared, and is created at the start of its function with the value `undefined`. `let` and `const` are block-scoped, cannot be redeclared in the same scope, and are created at the start of their block but cannot be touched until their line runs; touching them earlier throws a `ReferenceError` (the temporal dead zone). `const` also forbids reassigning the name, though the object it points to can still change. Hoisting is the name for \"declarations are processed before the code in a scope runs\"; it applies to all of them, with different starting states. Function declarations are hoisted with their body.",
+   "from": {
+    "title": "#7 · Closures and scope",
+    "url": "/lessons/2026-11-20-closures-and-scope"
+   }
+  },
+  {
+   "id": "1qwul8z",
+   "track": "javascript",
+   "kind": "check",
+   "q": "`const items = []; items.push(1);` Does this throw? What about `items = [1]`?",
+   "a": "The `push` works: `const` only stops you from pointing the name `items` at something else. `items = [1]` throws a `TypeError`, because that is a reassignment.",
+   "from": {
+    "title": "#7 · Closures and scope",
+    "url": "/lessons/2026-11-20-closures-and-scope"
+   }
+  },
+  {
+   "id": "6tz61",
+   "track": "javascript",
+   "kind": "check",
+   "q": "You call `makeCounter()` twice and increment the first counter three times. What does the second counter show, and why?",
+   "a": "0. Each call of `makeCounter` creates a new environment with its own `count`, and each returned function is linked to the environment of the call that created it.",
+   "from": {
+    "title": "#7 · Closures and scope",
+    "url": "/lessons/2026-11-20-closures-and-scope"
+   }
+  },
+  {
+   "id": "ubmgvo",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Why does `let x = 1; { console.log(x); let x = 2; }` throw instead of printing 1?",
+   "a": "The inner `let x` belongs to the block and is hoisted to its top, so inside the block the name `x` refers to the inner variable. That variable is in its temporal dead zone until its `let` line runs, so reading it throws a `ReferenceError`.",
+   "from": {
+    "title": "#7 · Closures and scope",
+    "url": "/lessons/2026-11-20-closures-and-scope"
+   }
+  },
+  {
+   "id": "vx9ec6",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Two functions are returned from one call of a factory. Do they share variables?",
+   "a": "Yes. Both were created in the same call's environment, so they see the same variables. A second call of the\nfactory would create a separate set.",
+   "from": {
+    "title": "Closure",
+    "url": "/concepts/closure"
+   }
+  },
+  {
+   "id": "1o0ogkz",
+   "track": "javascript",
+   "kind": "check",
+   "q": "A closure reads a variable that is later reassigned. Which value does it see when it runs?",
+   "a": "The current value at the time it runs. Closures capture the variable itself, not a snapshot of its value.",
+   "from": {
+    "title": "Closure",
+    "url": "/concepts/closure"
+   }
+  },
+  {
+   "id": "1y1v4qt",
+   "track": "javascript",
+   "kind": "check",
+   "q": "What does `console.log(a); var a = 1;` print, and what if you replace `var` with `let`?",
+   "a": "With `var`, `undefined`: the name exists from the start with that value. With `let`, a `ReferenceError`, because\nthe name is in its temporal dead zone until its line runs.",
+   "from": {
+    "title": "Hoisting",
+    "url": "/concepts/hoisting"
+   }
+  },
+  {
+   "id": "1sbssrd",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Can you call a function declaration above the line where it is written? An arrow function stored in a `const`?",
+   "a": "The declaration, yes: it is hoisted with its body. The arrow function, no: the `const` is in its dead zone, so the\ncall throws a `ReferenceError`.",
+   "from": {
+    "title": "Hoisting",
+    "url": "/concepts/hoisting"
+   }
+  },
+  {
+   "id": "tjzin4",
+   "track": "javascript",
+   "kind": "check",
+   "q": "A function defined at the top level reads `x`. It is called from inside another function that has its own `x`. Which `x` does it read?",
+   "a": "The top-level `x`. Lexical scope follows where the function was written, not who called it.",
+   "from": {
+    "title": "Lexical scope",
+    "url": "/concepts/lexical-scope"
+   }
+  },
+  {
+   "id": "2ce16u",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Does an `if` block create a new scope in Python? In JavaScript?",
+   "a": "Not in Python: only functions, classes and modules do. In JavaScript it does for `let`, `const` and `class`, but\nnot for `var`.",
+   "from": {
+    "title": "Lexical scope",
+    "url": "/concepts/lexical-scope"
+   }
+  },
+  {
+   "id": "1lpt8af",
+   "track": "javascript",
+   "kind": "check",
+   "q": "Why does `typeof x` throw inside the dead zone but return `\"undefined\"` for a name that was never declared?",
+   "a": "In the dead zone, the name exists in the scope but is marked uninitialized, and any access, `typeof` included,\nchecks that mark and throws. A name that was never declared is not found at all, and `typeof` is defined to return\n`\"undefined\"` in that case.",
+   "from": {
+    "title": "Temporal dead zone",
+    "url": "/concepts/temporal-dead-zone"
+   }
+  },
+  {
+   "id": "1j6xe2b",
+   "track": "javascript",
+   "kind": "check",
+   "q": "A function above a `const` declaration reads that `const`. Is that an error?",
+   "a": "Only if the function is called before the `const` line has run. The dead zone is about time, not position.",
+   "from": {
+    "title": "Temporal dead zone",
+    "url": "/concepts/temporal-dead-zone"
    }
   },
   {
@@ -963,6 +1172,28 @@
    "from": {
     "title": "TLS",
     "url": "/concepts/tls"
+   }
+  },
+  {
+   "id": "vv7r1c",
+   "track": "backend",
+   "kind": "check",
+   "q": "Why is Go popular for infrastructure tools and services?",
+   "a": "It compiles to a single static binary that is easy to ship in a container, builds fast, and makes concurrency cheap\nwith goroutines, which fits servers that handle many connections at once.",
+   "from": {
+    "title": "Go (programming language)",
+    "url": "/concepts/go-language"
+   }
+  },
+  {
+   "id": "1lif1f7",
+   "track": "backend",
+   "kind": "check",
+   "q": "What changed about `for` loops in Go 1.22, and why?",
+   "a": "Each iteration now gets a new loop variable. Before, all iterations shared one, so closures and goroutines that\nkept a reference to it often saw the final value, a very common bug.",
+   "from": {
+    "title": "Go (programming language)",
+    "url": "/concepts/go-language"
    }
   },
   {

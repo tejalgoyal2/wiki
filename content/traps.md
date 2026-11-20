@@ -36,11 +36,31 @@ runs first. Since Node 11, microtasks run after each individual timer callback, 
 **4. Promises are not threads.** `new Promise(resolve => { /* heavy loop */ })` still runs the heavy loop right now, on
 the main thread. A promise changes **when the result is delivered**, not where the work happens.
 
+### [[2026-11-20-closures-and-scope|#7 · Closures and scope]]
+
+- **Closures capture variables, not values.** If the variable changes before the closure runs, the closure sees the change. To freeze a value, make a new variable per iteration or call.
+- **`var` ignores blocks.** A `var` inside `if`, `for` or `{}` belongs to the whole function.
+- **Shadowing into the dead zone.** `let x = 1; { console.log(x); let x = 2; }` throws. The inner `let x` is hoisted to the top of its block, so inside the block `x` means the inner one, which is not ready yet.
+- **`const` is not immutable.** It locks the name, not the object.
+- **Stale closures in React.** `useEffect(() => { setInterval(() => setCount(count + 1), 1000) }, [])` keeps showing 1: the interval callback closed over the `count` from the first render, which is always 0. Use the updater form `setCount(c => c + 1)` or list `count` in the dependencies.
+- **Closures keep memory alive.** A long-lived callback (an event listener, a timer, a cache) keeps its whole environment reachable. In V8 (Chrome, Node), closures made in the same scope share one context object, so a large array used only by a short-lived callback can stay alive as long as a long-lived sibling closure does. Remove listeners and clear timers you no longer need.
+- **Python's `UnboundLocalError`.** Assigning to a name anywhere in a function makes it local for the whole function. Use `nonlocal` (or `global`) to assign to an outer variable.
+
 ### [[async-await|async / await]]
 
 - `array.forEach(async ...)` does not wait. Use `for...of` with `await`, or `Promise.all(array.map(...))`.
 - An `await` inside a loop makes the loop sequential. Sometimes that is right (rate limits), often it is just slow.
 - Forgetting `await` gives you a promise object instead of the value, and errors from it go unhandled.
+
+### [[closure|Closure]]
+
+- **The loop bug.** Callbacks created in a `for (var i ...)` loop all share one `i` and all see its final value.
+  `let` gives each iteration its own variable. Python's `[lambda: i for i in range(3)]` has the same bug; fix it
+  with a default argument, `lambda i=i: i`.
+- **Stale values.** A closure created during an early React render keeps that render's state. It does not see later
+  renders unless it is recreated.
+- **Memory.** A long-lived closure keeps its whole environment reachable. Unregister listeners and clear timers
+  when you are done.
 
 ### [[event-loop|Event loop]]
 
@@ -69,6 +89,22 @@ the main thread. A promise changes **when the result is delivered**, not where t
 - **A `for` loop of `await`s runs one at a time.** Each `await` hands control back to the loop and waits. To run
   independent requests together, start them all first and `await Promise.all(...)`.
 
+### [[hoisting|Hoisting]]
+
+- Reading a `var` before its line gives `undefined` silently, which hides bugs. Prefer `let` and `const`.
+- Function **expressions** and arrow functions assigned to variables are not hoisted as functions; only their
+  variable is.
+- In non-strict code, function declarations inside blocks have legacy rules (Annex B of the spec) that are easy
+  to get wrong. Use strict mode or modules, where they are simply block-scoped.
+
+### [[lexical-scope|Lexical scope]]
+
+- **`var` ignores blocks.** A `var` inside an `if` or a loop is visible in the whole function.
+- **Python's loop variable outlives the loop**, and assigning to a name anywhere in a function makes it local to the
+  whole function (`UnboundLocalError` if read first). Use `nonlocal` or `global` to assign outward.
+- **Shadowing by accident.** An inner `let user` hides the outer `user` for the whole block, even before its line
+  (see [[temporal-dead-zone|temporal dead zone]]).
+
 ### [[microtask-queue|Microtask queue]]
 
 - A microtask that keeps scheduling microtasks blocks the page completely: no paint, no input.
@@ -83,14 +119,30 @@ the main thread. A promise changes **when the result is delivered**, not where t
 
 ### [[promise|Promise]]
 
-- A rejected promise nobody handles becomes an "unhandled rejection" (in Node 15+ this crashes the process by default).
+- A rejected promise nobody handles becomes an "unhandled rejection". Browsers report it in the console; in Node 15+ it crashes the process by default (the `--unhandled-rejections` flag changes that).
 - Forgetting to `return` inside a `.then` breaks the chain: the next step gets `undefined` and doesn't wait.
 - A promise does not make work run in parallel or on another [[thread|thread]]. See [[concurrency-vs-parallelism]].
+- **Attaching the handler too late.** If you create a promise, do slow synchronous work, and only then attach
+  `.catch`, the rejection may already have been reported as unhandled. Attach handlers in the same turn you create
+  the promise.
+- **`forEach` with an async callback.** `items.forEach(async (x) => { await save(x) })` does not wait for anything:
+  `forEach` ignores the returned promises. Use `for...of` with `await` (sequential) or
+  `await Promise.all(items.map(save))` (parallel).
+- **Wrapping a promise in `new Promise`.** `new Promise((res) => fetch(url).then(res))` loses rejections, because
+  nothing calls `reject`. Just return `fetch(url)`.
 
 ### [[task-queue|Task queue]]
 
 - "Macrotask" is a nickname. The specs say "task".
 - Between two tasks the browser can paint; inside one long task it cannot. Long tasks (over 50 ms) are what make pages feel slow.
+
+### [[temporal-dead-zone|Temporal dead zone]]
+
+- **`typeof` is not a safe check here.** It is for undeclared names; on a dead-zone name it throws.
+- **Default parameters have one too.** `function f(a = b, b = 1) {}` throws when called without arguments, because
+  `b` is still in its dead zone when `a`'s default is computed.
+- **Circular module imports.** A module that reads an imported `const` before the exporting module has run its
+  declaration gets a `ReferenceError`.
 
 ## Python & Data
 
@@ -321,6 +373,14 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - A flaky test is worse than none: people stop trusting the signal.
 - Secrets in pipeline files leak. Use the tool's secret store.
 - "Passes on my machine" is why CI builds in a clean environment.
+
+### [[go-language|Go (programming language)]]
+
+- **Loop variables before Go 1.22.** A loop declared one variable for all iterations, so goroutines and closures
+  started in the loop often saw only the last value. Go 1.22 gives each iteration its own variable (for modules that
+  declare `go 1.22` or later).
+- **Goroutine leaks.** A goroutine blocked forever on a channel nobody writes to is never freed.
+- **Nil maps.** Reading a nil map is fine; writing to one panics. Create maps with `make`.
 
 ### [[http|HTTP]]
 

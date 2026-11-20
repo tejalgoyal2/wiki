@@ -71,6 +71,9 @@ The heap is where objects live; frames on the stack only hold references to them
 ## Leads to
 
 - [[2026-11-11-event-loop|#1 · The event loop]]: How JavaScript does many things at once with one thread, and why promise callbacks run before timers.
+- [[2026-11-20-closures-and-scope|#7 · Closures and scope]]: How JavaScript decides which variable a name means, why a function keeps the variables it was born with, what var, let and const really change, and the loop-and-setTimeout bug that every interview asks about.
+- [[closure|Closure]]: A function together with the variables from the scope where it was created. It can keep using them after that scope has returned.
 - [[event-loop|Event loop]]: The rule that decides when queued callbacks run in JavaScript - only when the call stack is empty, microtasks first.
+- [[lexical-scope|Lexical scope]]: The rule that a name refers to the variable in the nearest enclosing scope in the source code, decided by where code is written, not where it is called from.
 - [[thread|Thread]]: A sequence of instructions the operating system can schedule. Threads in one process share memory; each has its own call stack.
 <!-- /leads-to -->

@@ -51,4 +51,5 @@ Choosing the wrong one is a classic interview trap: adding threads to a CPU-heav
 
 - [[event-loop|Event loop]]: The rule that decides when queued callbacks run in JavaScript - only when the call stack is empty, microtasks first.
 - [[gil|GIL (Global Interpreter Lock)]]: A lock in CPython that lets only one thread run Python bytecode at a time. Python 3.13 added an optional build without it.
+- [[go-language|Go (programming language)]]: A compiled, statically typed language from Google built for servers and tools, known for fast builds, single-binary deploys and cheap concurrency with goroutines and channels.
 <!-- /leads-to -->

@@ -175,4 +175,5 @@ The [[hash-map-lookup|hash map lookup]] pattern solves [[two-sum|Two Sum]], [[co
 
 - [[bucket-sort|Bucket sort (pattern)]]: When the values you would sort by are small whole numbers, use them as list indexes ("buckets") and read the buckets in order, which costs O(n) instead of O(n log n).
 - [[hash-map-lookup|Hash map lookup (pattern)]]: Walk the input once and remember what you've seen in a hash map or set, so each "have I seen X?" question costs O(1).
+- [[prefix-sum|Prefix sum (pattern)]]: Precompute running totals once, in O(n), so that the sum (or product) of any range, or of everything before or after a position, is O(1) to read.
 <!-- /leads-to -->

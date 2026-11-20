@@ -13,10 +13,14 @@ This page is generated from the notes themselves, so it is always complete.
 | Term | In one line |
 |---|---|
 | [[async-await\|async / await]] | Syntax that lets promise-based code read top to bottom. An async function always returns a promise; await pauses only that function. |
+| [[closure\|Closure]] | A function together with the variables from the scope where it was created. It can keep using them after that scope has returned. |
 | [[event-loop\|Event loop]] | The rule that decides when queued callbacks run in JavaScript - only when the call stack is empty, microtasks first. |
+| [[hoisting\|Hoisting]] | JavaScript creates every name declared in a scope before running any of the scope's code; var starts as undefined, functions start ready, let/const/class start unusable. |
+| [[lexical-scope\|Lexical scope]] | The rule that a name refers to the variable in the nearest enclosing scope in the source code, decided by where code is written, not where it is called from. |
 | [[microtask-queue\|Microtask queue]] | A high-priority queue for promise callbacks and await continuations. It is emptied completely after every task. |
 | [[promise\|Promise]] | An object that stands for a result that isn't ready yet. It is pending, then fulfilled with a value or rejected with an error, exactly once. |
 | [[task-queue\|Task queue]] | Where callbacks for timers, events and I/O wait. The event loop runs one task per turn, then all microtasks. |
+| [[temporal-dead-zone\|Temporal dead zone]] | The time between entering a block and running a let, const or class declaration, during which the name exists but any access throws a ReferenceError. |
 | [[web-worker\|Web Worker]] | A real background thread for JavaScript in the browser. It has no DOM access and talks to the page by passing messages. |
 
 ## Python & Data
@@ -50,6 +54,7 @@ This page is generated from the notes themselves, so it is always complete.
 | Term | In one line |
 |---|---|
 | [[continuous-integration\|Continuous integration]] | Automatically building and testing the code on every push so that broken changes are caught within minutes; CI/CD adds automatic delivery to users. |
+| [[go-language\|Go (programming language)]] | A compiled, statically typed language from Google built for servers and tools, known for fast builds, single-binary deploys and cheap concurrency with goroutines and channels. |
 | [[http\|HTTP]] | The request-and-response protocol that browsers, apps and APIs use to talk to servers, built from a method, a target, headers, a status code and an optional body. |
 | [[http-status-codes\|HTTP status codes]] | The three-digit number in an HTTP response that tells the client what happened, grouped by the first digit into success, redirect, client error and server error. |
 | [[idempotency\|Idempotency]] | An operation is idempotent if doing it many times leaves the system in the same state as doing it once, which is what makes retries safe. |
@@ -73,4 +78,5 @@ This page is generated from the notes themselves, so it is always complete.
 | [[dynamic-array\|Dynamic array]] | An array that grows on demand by moving into a larger block of memory when full; Python's list, JavaScript's Array and Java's ArrayList work this way. |
 | [[hash-map\|Hash map]] | A key-value store that finds any key in O(1) time on average by turning the key into an array position with a hash function. |
 | [[hash-map-lookup\|Hash map lookup (pattern)]] | Walk the input once and remember what you've seen in a hash map or set, so each "have I seen X?" question costs O(1). |
+| [[prefix-sum\|Prefix sum (pattern)]] | Precompute running totals once, in O(n), so that the sum (or product) of any range, or of everything before or after a position, is O(1) to read. |
 | [[thread\|Thread]] | A sequence of instructions the operating system can schedule. Threads in one process share memory; each has its own call stack. |

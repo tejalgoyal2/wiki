@@ -289,5 +289,6 @@ print(round(time.time() - start, 1) < 0.5)   # True: the three waits overlapped
 - [[2026-11-11-event-loop|#1 · The event loop]]: How JavaScript does many things at once with one thread, and why promise callbacks run before timers.
 - [[concurrency-vs-parallelism|Concurrency vs parallelism]]: Concurrency is dealing with many things in progress at once; parallelism is doing many things at the same instant.
 - [[gil|GIL (Global Interpreter Lock)]]: A lock in CPython that lets only one thread run Python bytecode at a time. Python 3.13 added an optional build without it.
+- [[go-language|Go (programming language)]]: A compiled, statically typed language from Google built for servers and tools, known for fast builds, single-binary deploys and cheap concurrency with goroutines and channels.
 - [[web-worker|Web Worker]]: A real background thread for JavaScript in the browser. It has no DOM access and talks to the page by passing messages.
 <!-- /leads-to -->

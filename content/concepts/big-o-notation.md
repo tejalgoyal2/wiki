@@ -263,4 +263,5 @@ The lesson: when input comes from users, know the worst case, not just the avera
 - [[bucket-sort|Bucket sort (pattern)]]: When the values you would sort by are small whole numbers, use them as list indexes ("buckets") and read the buckets in order, which costs O(n) instead of O(n log n).
 - [[dynamic-array|Dynamic array]]: An array that grows on demand by moving into a larger block of memory when full; Python's list, JavaScript's Array and Java's ArrayList work this way.
 - [[hash-map|Hash map]]: A key-value store that finds any key in O(1) time on average by turning the key into an array position with a hash function.
+- [[prefix-sum|Prefix sum (pattern)]]: Precompute running totals once, in O(n), so that the sum (or product) of any range, or of everything before or after a position, is O(1) to read.
 <!-- /leads-to -->

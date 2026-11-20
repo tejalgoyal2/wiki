@@ -6,7 +6,7 @@ nolink: true
 ---
 
 Every **Check yourself** and **How interviews ask it** question in the wiki, in one place. Say the answer out loud
-or write it down **before** opening it: testing yourself is what makes knowledge stick. 119 questions so far. This page is generated from
+or write it down **before** opening it: testing yourself is what makes knowledge stick. 140 questions so far. This page is generated from
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
@@ -115,11 +115,38 @@ the notes, so it grows every day.
 
 ### From [[promise|Promise]]
 
+> [!question]- "Implement `Promise.all`."
+> Return a new promise. Keep a results array the size of the input and a counter of how many are still pending. For
+> each item, call `Promise.resolve(item).then(...)`: store the value at its **index** (so the order matches the
+> input, not the finish order), decrement the counter, and resolve with the array when it reaches zero. Pass the
+> outer `reject` as the rejection handler, so the first failure rejects the whole thing. Handle the empty input by
+> resolving with `[]` at once. Calling `reject` again for later failures is harmless, because a promise settles only
+> once.
+
+> [!question]- "What is the difference between `.then(f, g)` and `.then(f).catch(g)`?"
+> In the first, `g` handles only a rejection of the original promise; if `f` throws, `g` does not see it. In the
+> second, `.catch(g)` is attached to the promise returned by `.then(f)`, so it handles both a rejection of the
+> original and an error thrown by `f`. The second is usually what you want.
+
+> [!question]- "You need to call an API for 1,000 ids. How do you do it?"
+> Not one at a time (too slow) and not all 1,000 at once with `Promise.all` (it can overload the server or hit rate
+> limits, and one failure rejects everything). Run them with a concurrency limit, for example a pool of 5 to 10
+> workers that each take the next id from a shared list, and collect results with `allSettled`-style records so
+> failures can be retried. Add a timeout and retries with backoff for idempotent requests.
+
 > [!question]- Does the executor function passed to `new Promise` run now or later?
 > Now, synchronously. Only the `.then` callbacks run later, as microtasks.
 
 > [!question]- You need results from five requests, but one failing should not lose the other four. Which method?
 > `Promise.allSettled`.
+
+> [!question]- A `.catch` handler logs the error and returns nothing. Is the promise after it fulfilled or rejected?
+> Fulfilled, with `undefined`. A handler that returns normally recovers the chain. Rethrow if the error should keep
+> propagating.
+
+> [!question]- `Promise.race([fetchA(), timeout(1000)])` rejects with the timeout. Is the request stopped?
+> No. `race` only decides which result you see; the request keeps running. Pass an `AbortController` signal to the
+> request and abort it on timeout to really stop it.
 
 ### From [[task-queue|Task queue]]
 
@@ -136,6 +163,64 @@ the notes, so it grows every day.
 
 > [!question]- Your page freezes for 2 seconds while sorting a huge array. What are two fixes?
 > Move the sort into a Web Worker, or split the work into small chunks scheduled with `setTimeout` so the browser can paint between them.
+
+### From [[2026-11-20-closures-and-scope|#7 · Closures and scope]]
+
+> [!question]- "What is a closure? Give an example of where you would use one."
+> A closure is a function together with the variables from the scope where it was created. It can keep using them after that scope has returned. Mechanically, the function object stores a reference to its creating environment, and each call of the function gets that environment as its outer scope. Uses: private state (a counter or a module that exposes only some functions), function factories (`makeAdder(5)`), callbacks and event handlers that need context, and helpers like `once`, `memoize` and `debounce` that keep state between calls.
+
+> [!question]- "What does this print: `for (var i = 0; i < 3; i++) setTimeout(() => console.log(i))`? How do you fix it?"
+> `3 3 3`. `var` makes one function-scoped `i`, every callback closes over that same variable, and the callbacks run after the loop has finished, when `i` is 3. Fix it with `let`, which creates a new binding per iteration, so it prints `0 1 2`. Older fixes: wrap the body in an immediately invoked function that takes `i` as a parameter, or pass `i` as the third argument to `setTimeout`. All of them give each callback its own variable.
+
+> [!question]- "What is the difference between `var`, `let` and `const`? What is hoisting?"
+> `var` is function-scoped, can be redeclared, and is created at the start of its function with the value `undefined`. `let` and `const` are block-scoped, cannot be redeclared in the same scope, and are created at the start of their block but cannot be touched until their line runs; touching them earlier throws a `ReferenceError` (the temporal dead zone). `const` also forbids reassigning the name, though the object it points to can still change. Hoisting is the name for "declarations are processed before the code in a scope runs"; it applies to all of them, with different starting states. Function declarations are hoisted with their body.
+
+> [!question]- `const items = []; items.push(1);` Does this throw? What about `items = [1]`?
+> The `push` works: `const` only stops you from pointing the name `items` at something else. `items = [1]` throws a `TypeError`, because that is a reassignment.
+
+> [!question]- You call `makeCounter()` twice and increment the first counter three times. What does the second counter show, and why?
+> 0. Each call of `makeCounter` creates a new environment with its own `count`, and each returned function is linked to the environment of the call that created it.
+
+> [!question]- Why does `let x = 1; { console.log(x); let x = 2; }` throw instead of printing 1?
+> The inner `let x` belongs to the block and is hoisted to its top, so inside the block the name `x` refers to the inner variable. That variable is in its temporal dead zone until its `let` line runs, so reading it throws a `ReferenceError`.
+
+### From [[closure|Closure]]
+
+> [!question]- Two functions are returned from one call of a factory. Do they share variables?
+> Yes. Both were created in the same call's environment, so they see the same variables. A second call of the
+> factory would create a separate set.
+
+> [!question]- A closure reads a variable that is later reassigned. Which value does it see when it runs?
+> The current value at the time it runs. Closures capture the variable itself, not a snapshot of its value.
+
+### From [[hoisting|Hoisting]]
+
+> [!question]- What does `console.log(a); var a = 1;` print, and what if you replace `var` with `let`?
+> With `var`, `undefined`: the name exists from the start with that value. With `let`, a `ReferenceError`, because
+> the name is in its temporal dead zone until its line runs.
+
+> [!question]- Can you call a function declaration above the line where it is written? An arrow function stored in a `const`?
+> The declaration, yes: it is hoisted with its body. The arrow function, no: the `const` is in its dead zone, so the
+> call throws a `ReferenceError`.
+
+### From [[lexical-scope|Lexical scope]]
+
+> [!question]- A function defined at the top level reads `x`. It is called from inside another function that has its own `x`. Which `x` does it read?
+> The top-level `x`. Lexical scope follows where the function was written, not who called it.
+
+> [!question]- Does an `if` block create a new scope in Python? In JavaScript?
+> Not in Python: only functions, classes and modules do. In JavaScript it does for `let`, `const` and `class`, but
+> not for `var`.
+
+### From [[temporal-dead-zone|Temporal dead zone]]
+
+> [!question]- Why does `typeof x` throw inside the dead zone but return `"undefined"` for a name that was never declared?
+> In the dead zone, the name exists in the scope but is marked uninitialized, and any access, `typeof` included,
+> checks that mark and throws. A name that was never declared is not found at all, and `typeof` is defined to return
+> `"undefined"` in that case.
+
+> [!question]- A function above a `const` declaration reads that `const`. Is that an error?
+> Only if the function is called before the `const` line has run. The dead zone is about time, not position.
 
 ## Python & Data
 
@@ -432,6 +517,16 @@ the notes, so it grows every day.
 
 > [!question]- How many round trips does a fresh HTTPS request over TLS 1.3 take, from nothing to the response?
 > About three: one for the TCP handshake, one for the TLS handshake, and one for the request and response.
+
+### From [[go-language|Go (programming language)]]
+
+> [!question]- Why is Go popular for infrastructure tools and services?
+> It compiles to a single static binary that is easy to ship in a container, builds fast, and makes concurrency cheap
+> with goroutines, which fits servers that handle many connections at once.
+
+> [!question]- What changed about `for` loops in Go 1.22, and why?
+> Each iteration now gets a new loop variable. Before, all iterations shared one, so closures and goroutines that
+> kept a reference to it often saw the final value, a very common bug.
 
 ## CS Fundamentals
 
