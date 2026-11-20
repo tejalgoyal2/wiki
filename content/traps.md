@@ -41,7 +41,7 @@ the main thread. A promise changes **when the result is delivered**, not where t
 - **Closures capture variables, not values.** If the variable changes before the closure runs, the closure sees the change. To freeze a value, make a new variable per iteration or call.
 - **`var` ignores blocks.** A `var` inside `if`, `for` or `{}` belongs to the whole function.
 - **Shadowing into the dead zone.** `let x = 1; { console.log(x); let x = 2; }` throws. The inner `let x` is hoisted to the top of its block, so inside the block `x` means the inner one, which is not ready yet.
-- **`const` is not immutable.** It locks the name, not the object.
+- **`const` is not [[mutability|immutable]].** It locks the name, not the object.
 - **Stale closures in React.** `useEffect(() => { setInterval(() => setCount(count + 1), 1000) }, [])` keeps showing 1: the interval callback closed over the `count` from the first render, which is always 0. Use the updater form `setCount(c => c + 1)` or list `count` in the dependencies.
 - **Closures keep memory alive.** A long-lived callback (an event listener, a timer, a cache) keeps its whole environment reachable. In V8 (Chrome, Node), closures made in the same scope share one context object, so a large array used only by a short-lived callback can stay alive as long as a long-lived sibling closure does. Remove listeners and clear timers you no longer need.
 - **Python's `UnboundLocalError`.** Assigning to a name anywhere in a function makes it local for the whole function. Use `nonlocal` (or `global`) to assign to an outer variable.

@@ -222,7 +222,7 @@
    "track": "javascript",
    "kind": "interview",
    "q": "You need to call an API for 1,000 ids. How do you do it?",
-   "a": "Not one at a time (too slow) and not all 1,000 at once with `Promise.all` (it can overload the server or hit rate\nlimits, and one failure rejects everything). Run them with a concurrency limit, for example a pool of 5 to 10\nworkers that each take the next id from a shared list, and collect results with `allSettled`-style records so\nfailures can be retried. Add a timeout and retries with backoff for idempotent requests.",
+   "a": "Not one at a time (too slow) and not all 1,000 at once with `Promise.all` (it can overload the server or hit rate\nlimits, and one failure rejects everything). Run them with a concurrency limit, for example a pool of 5 to 10\nworkers that each take the next id from a shared list, and collect results with `allSettled`-style records so\nfailures can be retried. Add a timeout and retries with backoff for [idempotent](/concepts/idempotency) requests.",
    "from": {
     "title": "Promise",
     "url": "/concepts/promise"
@@ -1465,7 +1465,7 @@
    "track": "cs-fundamentals",
    "kind": "interview",
    "q": "\"Can you do better?\" (about an O(n²) solution)",
-   "a": "First check what the input size allows: with n up to 10⁵, O(n²) is about 10¹⁰ steps, too slow, so O(n log n) or O(n) is expected. Then look for repeated work: an inner loop that searches can usually become a hash lookup; an inner loop that sums a range can use a precomputed running total; sorting first can unlock two pointers or binary search. Say the trade-off out loud: most speedups spend O(n) memory to save time.",
+   "a": "First check what the input size allows: with n up to 10⁵, O(n²) is about 10¹⁰ steps, too slow, so O(n log n) or O(n) is expected. Then look for repeated work: an inner loop that searches can usually become a hash lookup; an inner loop that sums a range can use a precomputed [running total](/patterns/prefix-sum); sorting first can unlock two pointers or binary search. Say the trade-off out loud: most speedups spend O(n) memory to save time.",
    "from": {
     "title": "#6 · Big-O for real",
     "url": "/lessons/2026-11-19-big-o-for-real"
