@@ -14,7 +14,7 @@ updated: 2026-11-12
 
 A **monolith** is one application, deployed as one unit, usually with one database. **Microservices** split the
 product into small services (users, payments, notifications), each with **its own data**, deployed **on its own**,
-talking over [[http|HTTP]]/gRPC or a message queue such as Kafka.
+talking over [[http|HTTP]]/gRPC or a message queue such as [[kafka|Kafka]].
 
 ## What it buys, and what it costs
 
@@ -43,3 +43,9 @@ A common view: **start with a well-structured monolith**, split out a service wh
 
 > [!question]- Name one good reason to split a service out of a monolith.
 > One part needs to scale very differently (for example search under heavy load), or a separate team needs to deploy it on its own schedule.
+
+<!-- leads-to -->
+## Leads to
+
+- [[kafka|Apache Kafka]]: A distributed log that stores streams of records in topics split into partitions. Producers append, consumers read by offset, and records stay until a retention limit, not until read.
+<!-- /leads-to -->

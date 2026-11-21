@@ -19,7 +19,7 @@ then a JIT (just-in-time) compiler turns hot code into fast machine code while t
 ## Why job posts ask for it
 
 Banks, insurers, telecoms and large retailers run much of their backend on Java, usually with the **Spring Boot**
-framework, plus Kafka, SQL databases and [[microservices]]. It was the most-asked missing skill in the Canadian
+framework, plus [[kafka|Kafka]], SQL databases and [[microservices]]. It was the most-asked missing skill in the Canadian
 entry-level posts this wiki tracks (see [[2026-11-11-event-loop|lesson 1]]).
 
 ## If you know C#, Python or TypeScript

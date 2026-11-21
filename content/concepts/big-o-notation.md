@@ -191,7 +191,7 @@ Python runs simple steps more slowly than C++ or [[java|Java]], so treat the bou
 When you state a complexity, say four things: the time, the space, what n (and any other letter) means, and which
 step dominates. "O(n log n) time because of the sort; the scan after it is O(n). O(n) extra space for the sorted
 copy." If asked to improve, the usual moves are: replace a search inside a loop with a hash lookup, precompute
-running totals, sort once to unlock two pointers or binary search, or stop early when the answer is found. The
+running totals, sort once to unlock [[two-pointers|two pointers]] or binary search, or stop early when the answer is found. The
 lesson [[2026-11-19-big-o-for-real|#6 · Big-O for real]] works through the hidden costs of Python built-ins.
 
 ## Traps
@@ -264,4 +264,5 @@ The lesson: when input comes from users, know the worst case, not just the avera
 - [[dynamic-array|Dynamic array]]: An array that grows on demand by moving into a larger block of memory when full; Python's list, JavaScript's Array and Java's ArrayList work this way.
 - [[hash-map|Hash map]]: A key-value store that finds any key in O(1) time on average by turning the key into an array position with a hash function.
 - [[prefix-sum|Prefix sum (pattern)]]: Precompute running totals once, in O(n), so that the sum (or product) of any range, or of everything before or after a position, is O(1) to read.
+- [[two-pointers|Two pointers (pattern)]]: Keep two indexes into the same sequence and move them by a rule, so one pass replaces checking every pair.
 <!-- /leads-to -->

@@ -6,7 +6,7 @@ nolink: true
 ---
 
 Every **Check yourself** and **How interviews ask it** question in the wiki, in one place. Say the answer out loud
-or write it down **before** opening it: testing yourself is what makes knowledge stick. 140 questions so far. This page is generated from
+or write it down **before** opening it: testing yourself is what makes knowledge stick. 156 questions so far. This page is generated from
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
@@ -291,6 +291,50 @@ the notes, so it grows every day.
 > [!question]- What is the modern built-in way to deep-copy in JavaScript?
 > `structuredClone(value)`.
 
+### From [[2026-11-21-iterators-and-generators|#8 · Iterators and generators]]
+
+> [!question]- "What is the difference between an iterable and an iterator? How does a `for` loop work?"
+> An iterable can give you an iterator through `iter()`. An iterator has `__next__`, which returns the next item or raises `StopIteration`, and its `__iter__` returns itself. A `for` loop calls `iter()` once on the object, then calls `next()` until `StopIteration`. A list is an iterable that makes a new iterator each time; a generator or file object is an iterator, so it is used up after one pass.
+
+> [!question]- "What does `yield` do, and why would you use a generator instead of returning a list?"
+> `yield` pauses the function and hands a value to the caller; the function resumes at that point on the next `next()`, with its local variables intact. A generator produces values on demand, so memory stays constant however much data flows through, it can start producing before all the work is done, and it can model endless streams. Use a list when you need the whole result more than once, need `len()` or indexing, or the data is small.
+
+> [!question]- "This function returns `sum(g)` and then `max(g)` for the same generator `g`. What is wrong?"
+> The generator is exhausted by `sum`, so `max(g)` sees an empty iterator and raises `ValueError`. Either build a list once, or compute both in a single loop, or call the generator function again to get a fresh generator.
+
+> [!question]- `g = (n for n in range(3))`; `list(g)`; `list(g)`. What are the two results, and why?
+> `[0, 1, 2]` and then `[]`. The first call consumed the generator and the second finds it finished.
+
+> [!question]- A function has `yield` on its last line only. You call it and never call `next()`. Does any of its code run?
+> No. Calling a generator function only creates the generator object. The body starts at the first `next()` (a `for` loop or `list()` does that for you).
+
+> [!question]- You need the first 5 items of an endless generator. Why does `gen[:5]` fail, and what works?
+> Generators do not support indexing or slicing. Use `list(itertools.islice(gen, 5))`, which pulls only five items.
+
+### From [[generator|Generator]]
+
+> [!question]- You call a generator function. When does its first line run?
+> At the first `next()`, not at the call. The call only creates the generator object.
+
+> [!question]- Why can a generator resume after pausing, when a normal function's frame is gone after it returns?
+> Its frame is kept on the heap while it is paused, so its locals and its position survive.
+
+### From [[iterator|Iterator]]
+
+> [!question]- What is the difference between an iterable and an iterator?
+> An iterable can produce an iterator when you call `iter()` on it. An iterator keeps the position and has `__next__`; its `__iter__` returns itself.
+
+> [!question]- You run `sum(it)` twice on the same iterator. What happens the second time?
+> It returns 0 with no error, because the iterator was used up by the first call.
+
+### From [[lazy-evaluation|Lazy evaluation]]
+
+> [!question]- When is a list better than a generator?
+> When you need to read the data more than once, need its length, or need to index into it.
+
+> [!question]- Why does the endless `numbers()` pipeline above finish?
+> Each stage pulls one item at a time, and the loop breaks after four results, so the rest is never computed.
+
 ## ML & Data Science
 
 ### From [[2026-11-13-overfitting|#3 · Overfitting and the bias-variance trade-off]]
@@ -528,6 +572,14 @@ the notes, so it grows every day.
 > Each iteration now gets a new loop variable. Before, all iterations shared one, so closures and goroutines that
 > kept a reference to it often saw the final value, a very common bug.
 
+### From [[kafka|Apache Kafka]]
+
+> [!question]- Two events for the same user must be processed in order. How do you arrange that in Kafka?
+> Use the user id as the record key, so all of that user's events go to the same partition, where order is kept.
+
+> [!question]- A consumer reads a record. Is the record deleted?
+> No. It stays until the retention rule removes it, so other groups can read it and a consumer can re-read from an earlier offset.
+
 ## CS Fundamentals
 
 ### From [[big-o-notation|Big-O notation]]
@@ -546,6 +598,12 @@ the notes, so it grows every day.
 > in the input size. A 30-digit number would need about 10¹⁵ divisions.
 
 ### From [[call-stack|Call stack]]
+
+> [!question]- "What happens in memory when a function calls itself with no base case?"
+> Each call pushes a new frame on the stack. None is popped, because no call returns. The fixed-size stack fills up and the runtime raises `RecursionError` in Python or `RangeError` in JavaScript, or crashes the process in languages that do not check.
+
+> [!question]- "A recursive solution works on small inputs and overflows on large ones. What are your options?"
+> Rewrite it as a loop with an explicit stack, or turn it into a bottom-up version. In Python you may raise the recursion limit slightly, but that is risky, because a too-large limit crashes the interpreter. Check first whether the recursion is needed at all.
 
 > [!question]- What does a stack frame hold?
 > The function's arguments, its local variables, and where to return to when it finishes.

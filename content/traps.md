@@ -203,6 +203,44 @@ rule. Compare values with `==`.
 `([1, 99], 2)`. The tuple still points at the same list; the list changed. And a tuple can only be a [[hash-map|dict]] key or set
 member if everything inside it is hashable, so `([1], 2)` cannot be a key.
 
+### [[2026-11-21-iterators-and-generators|#8 · Iterators and generators]]
+
+- **One-shot.** `sum(gen)` twice gives the real answer, then `0`. A function that returns a generator can be consumed once. If you need two passes, make a list, or call the generator function again.
+- **Silent exhaustion.** `if gen:` is always true: a generator object has no length and is never "empty" as a truth value. Use `next(gen, None)` to peek.
+- **Late errors.** An exception in the body appears at the `next()` call that reached it, far from where the generator was created. Debugging pipelines means finding which stage raised.
+- **Late binding in generator expressions.** Only the outermost iterable is evaluated at once. Everything else waits for the first `next()`:
+
+```py run
+x = 10
+g = (x * i for i in range(3))   # range(3) is evaluated now; x is looked up later
+x = 100
+print(list(g))                  # [0, 100, 200]   it used the new x
+```
+
+- **`tee` and memory.** `itertools.tee` copies one iterator into several, but it buffers the items that one copy has seen and another has not. Far apart consumers can use as much memory as a list.
+- **Not a list.** No `len()`, no indexing, no slicing with `[:3]`. Use `islice`.
+- **Python-only habit.** JavaScript has the same idea (`function*`, `Symbol.iterator`, and async iterators for streams). The protocol differs: JavaScript's `next()` returns `{ value, done }` instead of raising an exception.
+
+### [[generator|Generator]]
+
+- A generator is one-shot, like any iterator. A second `list(g)` is empty.
+- In a generator expression only the outermost iterable is evaluated immediately; everything else waits until the
+  first `next()`.
+- Exceptions raised inside the body appear at the `next()` call, not at the line that created the generator.
+- `return value` inside a generator ends it and carries the value in `StopIteration.value`.
+
+### [[iterator|Iterator]]
+
+- Exhausted iterators look like empty ones. Check whether a function returns a list or an iterator.
+- `map`, `filter`, `zip`, `enumerate` and `reversed` return iterators in Python 3, not lists.
+- Changing a list while iterating over it moves the position under the iterator, so items get skipped.
+
+### [[lazy-evaluation|Lazy evaluation]]
+
+- Laziness hides work. An error or a slow step happens at the consumer, far from where you wrote it.
+- You cannot ask a lazy stream for its length or index into it.
+- Lazy is not always faster: if you need every item twice, store them once in a list.
+
 ### [[shallow-vs-deep-copy|Shallow vs deep copy]]
 
 - A shallow copy of a flat list of numbers or strings is enough: those are immutable.
@@ -366,6 +404,14 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - **Forgetting `Content-Length`** on a keep-alive connection. The client cannot tell where the response ends, so it hangs or the server has to close the connection.
 - **"HTTP/2 is always faster".** It helps with many small requests. On a lossy network the shared TCP connection can be slower than several separate ones.
 - **Treating the reason phrase as data.** `404 Not Found` and `404 Nope` are the same response. Only the number counts (and HTTP/2 drops the phrase entirely).
+
+### [[kafka|Apache Kafka]]
+
+- No global order across partitions. Choose the key so that events that must stay in order share a key.
+- Consumers get records **at least once** by default; after a crash a record can be seen twice, so handle repeats
+  (see [[idempotency|idempotency]]).
+- A slow consumer does not slow producers; it just falls behind, which you see as lag (the gap between the newest
+  offset and its offset).
 
 ### [[continuous-integration|Continuous integration]]
 

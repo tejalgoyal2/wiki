@@ -240,7 +240,7 @@ In 2021 a player published how they cut GTA Online's loading time by about 70% w
 > Because the capacity grows by a constant factor. With doubling, appending n items triggers copies of 1, 2, 4, up to n/2 items, which sum to less than n. So n appends do less than 2n work in total, which is O(1) per append amortized. If it grew by a fixed number of slots instead, the copies would sum to about n²/2 and append would be O(n). A single append can still be O(n); amortized is a bound over the whole sequence.
 
 > [!question]- "Can you do better?" (about an O(n²) solution)
-> First check what the input size allows: with n up to 10⁵, O(n²) is about 10¹⁰ steps, too slow, so O(n log n) or O(n) is expected. Then look for repeated work: an inner loop that searches can usually become a hash lookup; an inner loop that sums a range can use a precomputed [[prefix-sum|running total]]; sorting first can unlock two pointers or binary search. Say the trade-off out loud: most speedups spend O(n) memory to save time.
+> First check what the input size allows: with n up to 10⁵, O(n²) is about 10¹⁰ steps, too slow, so O(n log n) or O(n) is expected. Then look for repeated work: an inner loop that searches can usually become a hash lookup; an inner loop that sums a range can use a precomputed [[prefix-sum|running total]]; sorting first can unlock [[two-pointers|two pointers]] or binary search. Say the trade-off out loud: most speedups spend O(n) memory to save time.
 
 ## Build it
 

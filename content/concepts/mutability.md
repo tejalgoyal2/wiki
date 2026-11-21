@@ -61,5 +61,7 @@ console.log(arr);       // [ 1, 2, 3 ]
 <!-- leads-to -->
 ## Leads to
 
+- [[2026-11-21-iterators-and-generators|#8 · Iterators and generators]]: How a Python for loop really works, what the iterator protocol is, how yield pauses a function, and how to build lazy pipelines that process huge or endless data in constant memory.
+- [[iterator|Iterator]]: An object that hands out the items of a sequence one at a time through next(), and raises StopIteration when it runs out. An iterable is anything you can ask for a fresh iterator.
 - [[shallow-vs-deep-copy|Shallow vs deep copy]]: A shallow copy makes a new outer container that holds the same inner objects; a deep copy copies everything all the way down.
 <!-- /leads-to -->

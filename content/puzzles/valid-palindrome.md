@@ -34,4 +34,48 @@ digits at all, such as `" , "`, counts as a palindrome. ([on LeetCode](https://l
 
 ## Solution
 
-Arrives on the next lesson day.
+> [!success]- Open only after you have thought about it
+> **Key idea:** a palindrome is symmetric, so you only need to compare characters in mirrored positions. Put one
+> index at each end and walk them toward each other. Skip anything that is not a letter or digit as you go, so no
+> cleaned copy is ever built.
+>
+> **Pattern:** [[two-pointers|two pointers]] from both ends.
+>
+> **Why brute force is too slow (or too wasteful):** building a cleaned, lower-case copy and comparing it with its
+> reverse is still [[big-o-notation|O(n)]] time, so it is fine on speed. It costs O(n) extra memory, and in an interview it hides the
+> pattern the question is testing.
+>
+> **Steps:**
+>
+> 1. Set `left = 0` and `right = len(s) - 1`.
+> 2. While `left < right`: move `left` forward while it points at a character that is not alphanumeric; move `right`
+>    backward in the same way.
+> 3. If the two lower-cased characters differ, return `False`. Otherwise step both inward.
+> 4. If the pointers meet, return `True`.
+>
+> ```py run
+> def is_palindrome(s):
+>     left, right = 0, len(s) - 1
+>     while left < right:
+>         while left < right and not s[left].isalnum():
+>             left += 1
+>         while left < right and not s[right].isalnum():
+>             right -= 1
+>         if s[left].lower() != s[right].lower():
+>             return False
+>         left += 1
+>         right -= 1
+>     return True
+>
+> print(is_palindrome("Never odd, or even."))   # True
+> print(is_palindrome("race a car"))            # False
+> print(is_palindrome(" , "))                   # True
+> print(is_palindrome("0P"))                    # False
+> ```
+>
+> **Time:** O(n), each index moves at most n steps in total. **Space:** O(1).
+> Note the inner `left < right` checks: without them a string of only punctuation would push the pointers past each
+> other and raise an `IndexError`.
+>
+> **Where else this shows up:** reversing an array in place, "valid palindrome II" (one deletion allowed), merging
+> two sorted lists, and today's puzzle, [[two-sum-ii|Two Sum II]].

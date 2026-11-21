@@ -603,6 +603,138 @@
    }
   },
   {
+   "id": "1p19lm2",
+   "track": "python-data",
+   "kind": "interview",
+   "q": "What is the difference between an iterable and an iterator? How does a `for` loop work?",
+   "a": "An iterable can give you an iterator through `iter()`. An iterator has `__next__`, which returns the next item or raises `StopIteration`, and its `__iter__` returns itself. A `for` loop calls `iter()` once on the object, then calls `next()` until `StopIteration`. A list is an iterable that makes a new iterator each time; a generator or file object is an iterator, so it is used up after one pass.",
+   "from": {
+    "title": "#8 · Iterators and generators",
+    "url": "/lessons/2026-11-21-iterators-and-generators"
+   }
+  },
+  {
+   "id": "zcxo3r",
+   "track": "python-data",
+   "kind": "interview",
+   "q": "What does `yield` do, and why would you use a generator instead of returning a list?",
+   "a": "`yield` pauses the function and hands a value to the caller; the function resumes at that point on the next `next()`, with its local variables intact. A generator produces values on demand, so memory stays constant however much data flows through, it can start producing before all the work is done, and it can model endless streams. Use a list when you need the whole result more than once, need `len()` or indexing, or the data is small.",
+   "from": {
+    "title": "#8 · Iterators and generators",
+    "url": "/lessons/2026-11-21-iterators-and-generators"
+   }
+  },
+  {
+   "id": "23bmll",
+   "track": "python-data",
+   "kind": "interview",
+   "q": "This function returns `sum(g)` and then `max(g)` for the same generator `g`. What is wrong?",
+   "a": "The generator is exhausted by `sum`, so `max(g)` sees an empty iterator and raises `ValueError`. Either build a list once, or compute both in a single loop, or call the generator function again to get a fresh generator.",
+   "from": {
+    "title": "#8 · Iterators and generators",
+    "url": "/lessons/2026-11-21-iterators-and-generators"
+   }
+  },
+  {
+   "id": "1qrav4y",
+   "track": "python-data",
+   "kind": "check",
+   "q": "`g = (n for n in range(3))`; `list(g)`; `list(g)`. What are the two results, and why?",
+   "a": "`[0, 1, 2]` and then `[]`. The first call consumed the generator and the second finds it finished.",
+   "from": {
+    "title": "#8 · Iterators and generators",
+    "url": "/lessons/2026-11-21-iterators-and-generators"
+   }
+  },
+  {
+   "id": "u0wld4",
+   "track": "python-data",
+   "kind": "check",
+   "q": "A function has `yield` on its last line only. You call it and never call `next()`. Does any of its code run?",
+   "a": "No. Calling a generator function only creates the generator object. The body starts at the first `next()` (a `for` loop or `list()` does that for you).",
+   "from": {
+    "title": "#8 · Iterators and generators",
+    "url": "/lessons/2026-11-21-iterators-and-generators"
+   }
+  },
+  {
+   "id": "1h0t9h",
+   "track": "python-data",
+   "kind": "check",
+   "q": "You need the first 5 items of an endless generator. Why does `gen[:5]` fail, and what works?",
+   "a": "Generators do not support indexing or slicing. Use `list(itertools.islice(gen, 5))`, which pulls only five items.",
+   "from": {
+    "title": "#8 · Iterators and generators",
+    "url": "/lessons/2026-11-21-iterators-and-generators"
+   }
+  },
+  {
+   "id": "111jaws",
+   "track": "python-data",
+   "kind": "check",
+   "q": "You call a generator function. When does its first line run?",
+   "a": "At the first `next()`, not at the call. The call only creates the generator object.",
+   "from": {
+    "title": "Generator",
+    "url": "/concepts/generator"
+   }
+  },
+  {
+   "id": "b3r2wd",
+   "track": "python-data",
+   "kind": "check",
+   "q": "Why can a generator resume after pausing, when a normal function's frame is gone after it returns?",
+   "a": "Its frame is kept on the heap while it is paused, so its locals and its position survive.",
+   "from": {
+    "title": "Generator",
+    "url": "/concepts/generator"
+   }
+  },
+  {
+   "id": "1aj6xen",
+   "track": "python-data",
+   "kind": "check",
+   "q": "What is the difference between an iterable and an iterator?",
+   "a": "An iterable can produce an iterator when you call `iter()` on it. An iterator keeps the position and has `__next__`; its `__iter__` returns itself.",
+   "from": {
+    "title": "Iterator",
+    "url": "/concepts/iterator"
+   }
+  },
+  {
+   "id": "1h1k98o",
+   "track": "python-data",
+   "kind": "check",
+   "q": "You run `sum(it)` twice on the same iterator. What happens the second time?",
+   "a": "It returns 0 with no error, because the iterator was used up by the first call.",
+   "from": {
+    "title": "Iterator",
+    "url": "/concepts/iterator"
+   }
+  },
+  {
+   "id": "1rm03fd",
+   "track": "python-data",
+   "kind": "check",
+   "q": "When is a list better than a generator?",
+   "a": "When you need to read the data more than once, need its length, or need to index into it.",
+   "from": {
+    "title": "Lazy evaluation",
+    "url": "/concepts/lazy-evaluation"
+   }
+  },
+  {
+   "id": "um7kt4",
+   "track": "python-data",
+   "kind": "check",
+   "q": "Why does the endless `numbers()` pipeline above finish?",
+   "a": "Each stage pulls one item at a time, and the loop breaks after four results, so the rest is never computed.",
+   "from": {
+    "title": "Lazy evaluation",
+    "url": "/concepts/lazy-evaluation"
+   }
+  },
+  {
    "id": "hiozk2",
    "track": "ml",
    "kind": "interview",
@@ -1197,6 +1329,28 @@
    }
   },
   {
+   "id": "6egbbd",
+   "track": "backend",
+   "kind": "check",
+   "q": "Two events for the same user must be processed in order. How do you arrange that in Kafka?",
+   "a": "Use the user id as the record key, so all of that user's events go to the same partition, where order is kept.",
+   "from": {
+    "title": "Apache Kafka",
+    "url": "/concepts/kafka"
+   }
+  },
+  {
+   "id": "48dl67",
+   "track": "backend",
+   "kind": "check",
+   "q": "A consumer reads a record. Is the record deleted?",
+   "a": "No. It stays until the retention rule removes it, so other groups can read it and a consumer can re-read from an earlier offset.",
+   "from": {
+    "title": "Apache Kafka",
+    "url": "/concepts/kafka"
+   }
+  },
+  {
    "id": "m160j9",
    "track": "cs-fundamentals",
    "kind": "check",
@@ -1238,6 +1392,28 @@
    "from": {
     "title": "Big-O notation",
     "url": "/concepts/big-o-notation"
+   }
+  },
+  {
+   "id": "11m7ui7",
+   "track": "cs-fundamentals",
+   "kind": "interview",
+   "q": "What happens in memory when a function calls itself with no base case?",
+   "a": "Each call pushes a new frame on the stack. None is popped, because no call returns. The fixed-size stack fills up and the runtime raises `RecursionError` in Python or `RangeError` in JavaScript, or crashes the process in languages that do not check.",
+   "from": {
+    "title": "Call stack",
+    "url": "/concepts/call-stack"
+   }
+  },
+  {
+   "id": "1wc21lw",
+   "track": "cs-fundamentals",
+   "kind": "interview",
+   "q": "A recursive solution works on small inputs and overflows on large ones. What are your options?",
+   "a": "Rewrite it as a loop with an explicit stack, or turn it into a bottom-up version. In Python you may raise the recursion limit slightly, but that is risky, because a too-large limit crashes the interpreter. Check first whether the recursion is needed at all.",
+   "from": {
+    "title": "Call stack",
+    "url": "/concepts/call-stack"
    }
   },
   {

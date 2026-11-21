@@ -258,7 +258,7 @@ Then answer: where does each helper keep its state, and how many separate states
 
 ## Puzzle
 
-Today: [[valid-palindrome|Valid Palindrome]], the first two-pointer puzzle of the week. Yesterday's [[product-of-array-except-self|Product of Array Except Self]] has its solution.
+Today: [[valid-palindrome|Valid Palindrome]], the first [[two-pointers|two-pointer]] puzzle of the week. Yesterday's [[product-of-array-except-self|Product of Array Except Self]] has its solution.
 
 ## Market word: Go
 

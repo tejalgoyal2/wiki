@@ -19,7 +19,7 @@ A **unit test** runs one small unit of code, usually a function or a class, with
 
 A good test has three steps, often called arrange, act, assert: set up the input, call the code, check the result. It fails loudly when the result is wrong and passes silently otherwise.
 
-Good unit tests are fast, repeatable (same result every run), independent of each other, and about one behaviour. To get there, tests cut out slow or unpredictable parts: the network, the clock, a database, a random number generator. You replace those with a **stub** or **fake** that returns fixed data, or a **mock** that also records how it was called.
+Good unit tests are fast, repeatable (same result every run), independent of each other, and about one behaviour. To get there, tests cut out slow or unpredictable parts: the network, the clock, a database, a random number [[generator|generator]]. You replace those with a **stub** or **fake** that returns fixed data, or a **mock** that also records how it was called.
 
 Unit tests sit at the bottom of a pyramid. Above them are integration tests (several parts together, such as your code and a real database) and end-to-end tests (the whole system). Unit tests are cheap, so you have many; the higher kinds are slower, so you have fewer.
 

@@ -27,7 +27,10 @@ This page is generated from the notes themselves, so it is always complete.
 
 | Term | In one line |
 |---|---|
+| [[generator\|Generator]] | A Python function that uses yield to produce values one at a time, pausing between them. Calling it returns an iterator, and the function body does not start running until you ask for the first value. |
 | [[gil\|GIL (Global Interpreter Lock)]] | A lock in CPython that lets only one thread run Python bytecode at a time. Python 3.13 added an optional build without it. |
+| [[iterator\|Iterator]] | An object that hands out the items of a sequence one at a time through next(), and raises StopIteration when it runs out. An iterable is anything you can ask for a fresh iterator. |
+| [[lazy-evaluation\|Lazy evaluation]] | Computing a value only when something asks for it, instead of up front. It saves memory on large or endless data and lets a pipeline stop early. |
 | [[mutability\|Mutability]] | Whether an object can be changed after it is created. It decides what other names pointing at the same object will see. |
 | [[shallow-vs-deep-copy\|Shallow vs deep copy]] | A shallow copy makes a new outer container that holds the same inner objects; a deep copy copies everything all the way down. |
 
@@ -53,6 +56,7 @@ This page is generated from the notes themselves, so it is always complete.
 
 | Term | In one line |
 |---|---|
+| [[kafka\|Apache Kafka]] | A distributed log that stores streams of records in topics split into partitions. Producers append, consumers read by offset, and records stay until a retention limit, not until read. |
 | [[continuous-integration\|Continuous integration]] | Automatically building and testing the code on every push so that broken changes are caught within minutes; CI/CD adds automatic delivery to users. |
 | [[go-language\|Go (programming language)]] | A compiled, statically typed language from Google built for servers and tools, known for fast builds, single-binary deploys and cheap concurrency with goroutines and channels. |
 | [[http\|HTTP]] | The request-and-response protocol that browsers, apps and APIs use to talk to servers, built from a method, a target, headers, a status code and an optional body. |
@@ -80,3 +84,4 @@ This page is generated from the notes themselves, so it is always complete.
 | [[hash-map-lookup\|Hash map lookup (pattern)]] | Walk the input once and remember what you've seen in a hash map or set, so each "have I seen X?" question costs O(1). |
 | [[prefix-sum\|Prefix sum (pattern)]] | Precompute running totals once, in O(n), so that the sum (or product) of any range, or of everything before or after a position, is O(1) to read. |
 | [[thread\|Thread]] | A sequence of instructions the operating system can schedule. Threads in one process share memory; each has its own call stack. |
+| [[two-pointers\|Two pointers (pattern)]] | Keep two indexes into the same sequence and move them by a rule, so one pass replaces checking every pair. |
