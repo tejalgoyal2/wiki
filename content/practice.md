@@ -678,7 +678,7 @@ the notes, so it grows every day.
 > Because the capacity grows by a constant factor. With doubling, appending n items triggers copies of 1, 2, 4, up to n/2 items, which sum to less than n. So n appends do less than 2n work in total, which is O(1) per append amortized. If it grew by a fixed number of slots instead, the copies would sum to about n²/2 and append would be O(n). A single append can still be O(n); amortized is a bound over the whole sequence.
 
 > [!question]- "Can you do better?" (about an O(n²) solution)
-> First check what the input size allows: with n up to 10⁵, O(n²) is about 10¹⁰ steps, too slow, so O(n log n) or O(n) is expected. Then look for repeated work: an inner loop that searches can usually become a hash lookup; an inner loop that sums a range can use a precomputed [[prefix-sum|running total]]; sorting first can unlock two pointers or binary search. Say the trade-off out loud: most speedups spend O(n) memory to save time.
+> First check what the input size allows: with n up to 10⁵, O(n²) is about 10¹⁰ steps, too slow, so O(n log n) or O(n) is expected. Then look for repeated work: an inner loop that searches can usually become a hash lookup; an inner loop that sums a range can use a precomputed [[prefix-sum|running total]]; sorting first can unlock [[two-pointers|two pointers]] or binary search. Say the trade-off out loud: most speedups spend O(n) memory to save time.
 
 > [!question]- What is the complexity of `for x in a: if x in b: count += 1`, with `len(a) = n` and `b` a list of size m? What if `b` is a set?
 > With a list, each `in` scans up to m items, so O(n · m). With a set, each `in` is O(1) on average, so O(n), plus O(m) once to build the set if you have to make it.

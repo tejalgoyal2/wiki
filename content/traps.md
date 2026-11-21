@@ -537,7 +537,7 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 ### [[hash-map-lookup|Hash map lookup (pattern)]]
 
 - Ask before you store, or an item can pair with itself.
-- If the input is already sorted, two pointers may solve it in O(1) space instead.
+- If the input is already sorted, [[two-pointers|two pointers]] may solve it in O(1) space instead.
 
 Built on the [[hash-map|hash map]] concept.
 
