@@ -319,6 +319,15 @@ Split by group, so all rows of one patient land on one side (`GroupKFold`).
 **And the quiet one: tuning on the test set.** Every time you look at the test score and change something, some of
 the test set leaks into your choices. Use validation for decisions; use test once.
 
+### [[2026-11-24-linear-regression|#9 · Linear regression from scratch]]
+
+- **Learning rate too high, or unscaled features.** The loss becomes `nan`. Standardise, then lower the rate.
+- **Judging by training error only.** A line with 50 features and 60 rows fits the training rows well and does badly on new ones. Use a [[train-validation-test-split|validation split]].
+- **Extrapolating.** The line says 7.4 for `x = 6`, but the data stopped at 5. Far outside the range it is a guess dressed as a number.
+- **Reading weights as causes.** A weight describes a pattern in this sample. It does not say that changing `x` would change `y`.
+- **Wrong gradient, still "trains".** A sign error in the gradient code makes the loss rise; a scale error makes it slow. Compare to a numeric estimate (below).
+- **Two meanings of "bias".** The intercept `b` and the bias in bias-variance are different things.
+
 ### [[bias-variance-trade-off|Bias-variance trade-off]]
 
 - **"Bias" here is not fairness bias.** It means systematic error of the model family, not discrimination against
@@ -344,6 +353,31 @@ the test set leaks into your choices. Use validation for decisions; use test onc
   sorted by outcome.
 - **The serving pipeline computes features differently.** If training used a field cleaned after the fact, and
   production sees the raw value, it is the same problem from the other side.
+
+### [[gradient-descent|Gradient descent]]
+
+- Features on very different scales make the landscape a long narrow valley, and the path zigzags. Standardise first.
+- A wrong gradient formula still trains, just badly. Check it against a numeric estimate: `(loss(w + h) - loss(w - h)) / (2h)`.
+- Stopping at a flat spot is not the same as the best answer outside convex problems such as linear regression.
+
+### [[learning-rate|Learning rate]]
+
+- Reading a falling loss as success. A tiny rate also gives a falling loss, just too slowly to finish.
+- Forgetting to scale features, then blaming the model when the loss becomes `nan` or `inf`.
+- Tuning the rate on the test set. Use a validation set ([[train-validation-test-split|splits]]).
+
+### [[linear-regression|Linear regression]]
+
+- One outlier can tilt the whole line, because squared error punishes big misses.
+- Predicting far outside the range of the training inputs (extrapolating) trusts the line where it has seen nothing.
+- Correlation in the data is not a cause; a weight is a pattern in the sample, not a lever.
+- Many features and few rows overfit; see [[overfitting|overfitting]].
+
+### [[mean-squared-error|Mean squared error]]
+
+- A low training MSE says nothing about new data; compare it with the validation MSE ([[overfitting|overfitting]]).
+- MSE is not comparable across targets with different units or scales. Use RMSE, or R², which compares to a baseline.
+- Outliers can dominate it. Check the biggest errors before trusting the average.
 
 ### [[overfitting|Overfitting]]
 
@@ -433,6 +467,7 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - Statelessness does not mean no state: cookies and [[token|tokens]] carry state with each request.
 - A `GET` must not change data. Robots and prefetchers send `GET` freely.
 - The status code is the contract. A `200` with an error message in the body hides failures from clients and monitoring.
+- A `404` from a typo and a `404` from a deleted record look the same; log the cause, not just the code.
 - Versions change performance, not meaning. Code written against methods and status codes works on all three.
 
 ### [[http-status-codes|HTTP status codes]]
@@ -448,6 +483,14 @@ the test set leaks into your choices. Use validation for decisions; use test onc
 - "Append" and "increment" are not idempotent. "Set to this value" is.
 - Check-then-act without a unique constraint races: two retries at once can both pass the check. Enforce the key with a unique index.
 - Storing the key forever costs space; storing it too briefly allows duplicates after a long outage.
+
+### [[integration-testing|Integration testing]]
+
+- Shared state between tests (a leftover table) makes results depend on order. Reset the state for every test.
+- Calling live third-party services makes tests flaky and slow. Use the provider's test mode or a local stand-in.
+- Testing everything this way. Put detailed logic in fast unit tests and use few integration tests for the seams.
+- Machine-learning code: unit test the loss and [[gradient-descent|gradients]]; add one integration test that fits a tiny known dataset
+  and checks the result (see [[2026-11-24-linear-regression|lesson 9]]).
 
 ### [[tcp|TCP]]
 

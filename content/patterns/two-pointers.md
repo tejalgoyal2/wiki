@@ -6,7 +6,7 @@ track: cs-fundamentals
 requires: [big-o-notation]
 description: Keep two indexes into the same sequence and move them by a rule, so one pass replaces checking every pair.
 created: 2026-11-21
-updated: 2026-11-21
+updated: 2026-11-24
 ---
 <!-- read-first -->
 > [!info] Read first
@@ -55,3 +55,10 @@ is cheaper than sorting first.
 |---|---|
 | [[valid-palindrome\|Valid Palindrome]] | compare ends, step both inward |
 | [[two-sum-ii\|Two Sum II]] | sum too small: move left; too big: move right |
+| [[3sum\|3Sum]] | fix the first number, then run [[two-sum\|Two Sum]] II on the rest; skip repeated values |
+
+## When one pointer is not enough
+
+Some problems need one more loop around the pointers. In [[3sum|3Sum]] the outer loop picks the first number, and two
+pointers search the rest, so the cost is O(n²): n choices times an O(n) sweep. That is still far better than the
+O(n³) of trying every triple. The same "fix one, sweep the rest" shape works for 4Sum, at O(n³).

@@ -25,7 +25,7 @@ total is smallest.
 
 ## How it works
 
-If labels are `y = f(x) + noise`, the expected squared error of a trained model at a point `x` splits exactly into
+If labels are `y = f(x) + noise`, the expected [[mean-squared-error|squared error]] of a trained model at a point `x` splits exactly into
 three parts (*The Elements of Statistical Learning*, section 7.3):
 
 ```
@@ -50,7 +50,7 @@ holds, but the maths does not split as cleanly.
 | Model | Bias | Variance |
 |---|---|---|
 | Predict the training mean everywhere | High | Very low |
-| Linear regression on a curved pattern | High | Low |
+| [[linear-regression\|Linear regression]] on a curved pattern | High | Low |
 | k-nearest neighbours, k = 1 | Low | High |
 | One deep decision tree | Low | High |
 | Random forest (many trees averaged) | Low | Lower than one tree |

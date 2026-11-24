@@ -41,6 +41,10 @@ This page is generated from the notes themselves, so it is always complete.
 | [[bias-variance-trade-off\|Bias-variance trade-off]] | A model's error on new data comes from bias (too rigid), variance (too sensitive to its sample) and noise; making it more flexible trades one for the other. |
 | [[cross-validation\|Cross-validation]] | Estimating how well a model generalises by training it k times, each time holding out a different part of the training data, and averaging the scores. |
 | [[data-leakage\|Data leakage]] | When information the model will not have at prediction time gets into training, so offline scores look better than real-world performance. |
+| [[gradient-descent\|Gradient descent]] | An algorithm that finds good model parameters by repeatedly stepping in the direction that lowers the loss fastest, using the slope of the loss at the current point. |
+| [[learning-rate\|Learning rate]] | The number that scales each gradient descent step. Too small and training crawls; too large and the loss jumps around or explodes. |
+| [[linear-regression\|Linear regression]] | A model that predicts a number as a weighted sum of its inputs plus a constant, fitted by choosing the weights that make the squared errors smallest. |
+| [[mean-squared-error\|Mean squared error]] | The average of the squared gaps between a model's predictions and the true values, used as the score a regression model tries to make small. |
 | [[overfitting\|Overfitting]] | When a model learns the noise in its training data along with the real pattern, so it scores well in training and worse on new data. |
 | [[train-validation-test-split\|Train, validation and test split]] | Cutting labelled data into three groups - one to fit the model, one to choose between models, one to measure the final choice honestly. |
 
@@ -62,6 +66,7 @@ This page is generated from the notes themselves, so it is always complete.
 | [[http\|HTTP]] | The request-and-response protocol that browsers, apps and APIs use to talk to servers, built from a method, a target, headers, a status code and an optional body. |
 | [[http-status-codes\|HTTP status codes]] | The three-digit number in an HTTP response that tells the client what happened, grouped by the first digit into success, redirect, client error and server error. |
 | [[idempotency\|Idempotency]] | An operation is idempotent if doing it many times leaves the system in the same state as doing it once, which is what makes retries safe. |
+| [[integration-testing\|Integration testing]] | Testing that several real parts of a system work together, such as your code with an actual database or another service, rather than each part alone. |
 | [[java\|Java]] | A statically typed, object-oriented language that compiles to bytecode for the JVM. Heavily used in banks and large companies. |
 | [[microservices\|Microservices]] | Building one product as several small services that each own one job and their own data, and talk over the network. |
 | [[tcp\|TCP]] | The transport protocol that turns unreliable network packets into a reliable, ordered stream of bytes between two programs; HTTP/1.1 and HTTP/2 run on top of it. |

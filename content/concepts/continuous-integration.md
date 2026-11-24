@@ -26,7 +26,7 @@ A CI system watches a repository. A push or pull request starts a **pipeline**, 
 
 1. Check out the code.
 2. Install dependencies and build.
-3. Run [[unit-testing|unit tests]], then slower integration tests, plus linters and security scans.
+3. Run [[unit-testing|unit tests]], then slower [[integration-testing|integration tests]], plus linters and security scans.
 4. Publish an artifact (a package or container image).
 5. For CD: deploy to staging, run a smoke test (often an [[http|HTTP]] call that must return `200`), then to production.
 

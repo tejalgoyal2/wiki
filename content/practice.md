@@ -6,7 +6,7 @@ nolink: true
 ---
 
 Every **Check yourself** and **How interviews ask it** question in the wiki, in one place. Say the answer out loud
-or write it down **before** opening it: testing yourself is what makes knowledge stick. 156 questions so far. This page is generated from
+or write it down **before** opening it: testing yourself is what makes knowledge stick. 174 questions so far. This page is generated from
 the notes, so it grows every day.
 
 > [!tip] Prefer flashcards?
@@ -420,6 +420,58 @@ the notes, so it grows every day.
 > [!question]- You have a year of daily data. Should you shuffle before splitting?
 > No. Split by time so the model is trained on earlier days and evaluated on later ones, which is how it will be used.
 
+### From [[2026-11-24-linear-regression|#9 · Linear regression from scratch]]
+
+> [!question]- "Walk me through how linear regression is trained with gradient descent."
+> Start with weights at zero (or small random numbers). Predict every row, and compute the loss, the mean of the squared errors. Compute the gradient: the slope of the loss for each weight. Move every weight a small step against its gradient, scaled by the learning rate. Repeat until the loss stops falling. Because the loss for a linear model is a single smooth bowl, it reaches the same answer as the closed-form solution if the learning rate is small enough and the features are on similar scales.
+
+> [!question]- "Your training loss is `nan` after a few steps. What do you check?"
+> First the learning rate: too large, each step overshoots further than the last and the numbers overflow, so lower it by about 10 times. Second the feature scales: a feature in the thousands makes the gradient huge, so standardise the inputs. Third the data, for missing values or infinities, and the gradient code, by comparing it with a numeric estimate on a few points.
+
+> [!question]- "When would you use the closed form instead of gradient descent?"
+> When the data is small to medium and the number of features is modest, the closed form (normal equation or a library solver) gives the exact answer in one step with no learning rate to tune. Gradient descent wins when there are very many rows or features, when the data does not fit in memory (use mini-batches), or when the model has no closed form, as in neural networks.
+
+> [!question]- Why does gradient descent subtract the gradient?
+> The gradient points toward the steepest increase of the loss. Moving the opposite way lowers the loss.
+
+> [!question]- You multiply one feature by 1,000 (kilometres to metres). What happens to the best fit, and to gradient descent?
+> The best line's predictions stay the same; the weight for that feature becomes 1,000 times smaller. But gradient descent now sees a gradient about 1,000 times larger for that weight, so the same learning rate may diverge. That is why you standardise features first.
+
+> [!question]- Your model has R² = 0.95 on the training rows and 0.40 on the validation rows. What does it tell you?
+> The model is overfitting: it has learned the quirks of the training sample. Reduce the number of features, get more data, or add regularisation (lesson 27), and judge by the validation score.
+
+### From [[gradient-descent|Gradient descent]]
+
+> [!question]- Why do we subtract the gradient instead of adding it?
+> The gradient points in the direction the loss grows fastest. To make the loss smaller we go the opposite way.
+
+> [!question]- What is the difference between batch gradient descent and SGD?
+> Batch computes each gradient over all rows and is exact but slow on big data. SGD uses one row (or a mini-batch) per step, so each step is cheap and noisy.
+
+### From [[learning-rate|Learning rate]]
+
+> [!question]- Your training loss goes to `nan` after a few steps. What is the first thing to try?
+> Lower the learning rate (for example by 10 times) and standardise the features. A rate that is too large makes each step overshoot further, until the numbers overflow.
+
+> [!question]- Is the learning rate learned during training?
+> No. It is a hyperparameter you choose before training. Optimisers such as Adam adjust the effective step size, but they still start from a rate you set.
+
+### From [[linear-regression|Linear regression]]
+
+> [!question]- What does R² = 0.64 mean?
+> The line explains 64% of the variation in the target around its mean. The other 36% is left over as error. It compares the model with always predicting the mean.
+
+> [!question]- Is `y = w1*x + w2*x²` a linear model?
+> Yes. It is linear in the weights `w1` and `w2`; the `x²` is just a second input column.
+
+### From [[mean-squared-error|Mean squared error]]
+
+> [!question]- Why square the errors instead of just averaging them?
+> Plain errors of opposite sign cancel, so a bad model could score zero. Squaring makes every error count, punishes large errors more, and gives a smooth slope.
+
+> [!question]- A model's MSE is 25 on house prices in thousands of dollars. What is a typical error?
+> About 5 thousand dollars, the square root (RMSE). MSE is in squared units, so it is hard to read directly.
+
 ## LLMs & RAG
 
 ### From [[2026-11-17-tokens|#4 · Tokens and context windows]]
@@ -522,6 +574,12 @@ the notes, so it grows every day.
 
 ### From [[http|HTTP]]
 
+> [!question]- "What happens between typing a URL and seeing the page, at the HTTP level?"
+> The browser resolves the host name, opens a TCP connection and, for HTTPS, a TLS handshake. It sends `GET /` with a `Host` header. The server replies with a status line, headers and the HTML. The browser parses it, finds more resources (scripts, styles, images) and fetches them, reusing the connection or multiplexing them over one HTTP/2 connection. Cache headers decide which of those it can skip.
+
+> [!question]- "Why is POST not safe to retry, and how do you make it safe?"
+> `POST` is not idempotent: sending it twice can create two orders. If a timeout hides whether the first one arrived, a blind retry may duplicate it. Make the request idempotent: the client sends a unique idempotency key, and the server stores the result under it and returns the stored result for a repeat.
+
 > [!question]- What does it mean that HTTP is stateless?
 > Each request carries everything the server needs; the server does not remember earlier requests from the same client. State, such as a login, is carried by the client in cookies or tokens on each request.
 
@@ -579,6 +637,14 @@ the notes, so it grows every day.
 
 > [!question]- A consumer reads a record. Is the record deleted?
 > No. It stays until the retention rule removes it, so other groups can read it and a consumer can re-read from an earlier offset.
+
+### From [[integration-testing|Integration testing]]
+
+> [!question]- Why can a test suite of only unit tests pass while the app is broken?
+> Each unit test fakes the parts around it, so it never checks the joins: a wrong SQL column, a changed JSON field, or a mismatched setting. Integration tests exercise those joins.
+
+> [!question]- What should you fake in an integration test?
+> Only what is slow, costly or outside your control, such as a live payment service. Keep the parts whose interaction you want to test real.
 
 ## CS Fundamentals
 

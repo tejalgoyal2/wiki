@@ -75,5 +75,7 @@ gives a steadier estimate of validation error. Lesson: [[2026-11-13-overfitting|
 <!-- leads-to -->
 ## Leads to
 
+- [[2026-11-24-linear-regression|#9 · Linear regression from scratch]]: Fit a straight line to data in plain Python, first with a formula and then with gradient descent, and learn what the loss, the learning rate and the assumptions do.
 - [[bias-variance-trade-off|Bias-variance trade-off]]: A model's error on new data comes from bias (too rigid), variance (too sensitive to its sample) and noise; making it more flexible trades one for the other.
+- [[mean-squared-error|Mean squared error]]: The average of the squared gaps between a model's predictions and the true values, used as the score a regression model tries to make small.
 <!-- /leads-to -->

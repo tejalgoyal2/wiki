@@ -21,7 +21,7 @@ A good test has three steps, often called arrange, act, assert: set up the input
 
 Good unit tests are fast, repeatable (same result every run), independent of each other, and about one behaviour. To get there, tests cut out slow or unpredictable parts: the network, the clock, a database, a random number [[generator|generator]]. You replace those with a **stub** or **fake** that returns fixed data, or a **mock** that also records how it was called.
 
-Unit tests sit at the bottom of a pyramid. Above them are integration tests (several parts together, such as your code and a real database) and end-to-end tests (the whole system). Unit tests are cheap, so you have many; the higher kinds are slower, so you have fewer.
+Unit tests sit at the bottom of a pyramid. Above them are [[integration-testing|integration tests]] (several parts together, such as your code and a real database) and end-to-end tests (the whole system). Unit tests are cheap, so you have many; the higher kinds are slower, so you have fewer.
 
 Common tools: `unittest` and `pytest` in Python (3.13 ships `unittest`; `pytest` is a package), Jest or Vitest in JavaScript.
 
@@ -76,4 +76,5 @@ Tests around code that calls a language model keep the model behind a stub; see 
 ## Leads to
 
 - [[continuous-integration|Continuous integration]]: Automatically building and testing the code on every push so that broken changes are caught within minutes; CI/CD adds automatic delivery to users.
+- [[integration-testing|Integration testing]]: Testing that several real parts of a system work together, such as your code with an actual database or another service, rather than each part alone.
 <!-- /leads-to -->

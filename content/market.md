@@ -10,56 +10,56 @@ open-source job scanner, reads the descriptions of new entry-level and new-grad 
 counts the skills they ask for. The terms below are the ones that its owner's skill list doesn't cover yet, so
 everyday skills like Python, JavaScript and SQL are left out on purpose: this is a list of **what to learn next**.
 
-Report date: 2026-11-16. **This wiki covers 20% of this week's top terms.**
+Report date: 2026-11-23. **This wiki covers 24% of this week's top terms.**
 
-## Last 7 days (1230 job descriptions)
+## Last 7 days (1075 job descriptions)
 
 | Term | Job posts | In the wiki |
 |---|---:|---|
-| Salesforce | 38 | not yet |
-| SAP | 37 | not yet |
-| Oracle | 33 | not yet |
-| Java | 30 | [[java\|Java]] |
-| distributed systems | 28 | not yet |
-| GCP | 21 | not yet |
-| microservices | 21 | [[microservices\|Microservices]] |
-| Go | 20 | not yet |
-| Cisco | 19 | not yet |
+| Java | 46 | [[java\|Java]] |
+| microservices | 33 | [[microservices\|Microservices]] |
+| SAP | 31 | not yet |
+| Oracle | 30 | not yet |
+| Salesforce | 30 | not yet |
+| Cisco | 23 | not yet |
+| integration testing | 17 | [[integration-testing\|Integration testing]] |
 | unit testing | 17 | [[unit-testing\|Unit testing]] |
-| Kafka | 16 | [[kafka\|Apache Kafka]] |
-| Tableau | 15 | not yet |
-| Snowflake | 14 | not yet |
-| Jenkins | 13 | [[continuous-integration\|Continuous integration]] |
-| integration testing | 13 | not yet |
-| Airflow | 10 | not yet |
-| Angular | 10 | not yet |
-| Grafana | 10 | not yet |
-| MySQL | 10 | not yet |
-| Prometheus | 10 | not yet |
-| VBA | 10 | not yet |
-| Vue | 9 | not yet |
-| Ansible | 8 | not yet |
-| VLANs | 8 | not yet |
-| GitLab | 7 | not yet |
+| Dart | 16 | not yet |
+| GCP | 16 | not yet |
+| distributed systems | 16 | not yet |
+| Spring | 13 | not yet |
+| Jenkins | 12 | [[continuous-integration\|Continuous integration]] |
+| Grafana | 11 | not yet |
+| Kafka | 11 | [[kafka\|Apache Kafka]] |
+| MySQL | 11 | not yet |
+| Go | 10 | not yet |
+| Vue | 10 | not yet |
+| PHP | 9 | not yet |
+| Prometheus | 9 | not yet |
+| Tableau | 9 | not yet |
+| VBA | 8 | not yet |
+| Angular | 7 | not yet |
+| Ansible | 7 | not yet |
+| GraphQL | 7 | not yet |
 
-## Last 30 days (3357 job descriptions)
+## Last 30 days (3975 job descriptions)
 
 | Term | Job posts | In the wiki |
 |---|---:|---|
-| Java | 131 | [[java\|Java]] |
-| SAP | 117 | not yet |
-| Salesforce | 107 | not yet |
-| Oracle | 94 | not yet |
-| microservices | 83 | [[microservices\|Microservices]] |
-| distributed systems | 76 | not yet |
-| GCP | 70 | not yet |
-| Tableau | 60 | not yet |
-| unit testing | 53 | [[unit-testing\|Unit testing]] |
-| Go | 49 | not yet |
-| Jenkins | 45 | [[continuous-integration\|Continuous integration]] |
-| Kafka | 41 | [[kafka\|Apache Kafka]] |
-| Angular | 38 | not yet |
-| Snowflake | 38 | not yet |
-| Cisco | 36 | not yet |
+| Java | 149 | [[java\|Java]] |
+| SAP | 134 | not yet |
+| Salesforce | 125 | not yet |
+| microservices | 106 | [[microservices\|Microservices]] |
+| Oracle | 96 | not yet |
+| distributed systems | 78 | not yet |
+| Cisco | 59 | not yet |
+| unit testing | 59 | [[unit-testing\|Unit testing]] |
+| GCP | 58 | not yet |
+| Tableau | 51 | not yet |
+| Jenkins | 49 | [[continuous-integration\|Continuous integration]] |
+| Kafka | 48 | [[kafka\|Apache Kafka]] |
+| integration testing | 48 | [[integration-testing\|Integration testing]] |
+| Go | 46 | not yet |
+| Spring | 38 | not yet |
 
 Each lesson's **Market word** takes the top term that has no note yet, so this page fills up over time.

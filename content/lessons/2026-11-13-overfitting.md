@@ -49,7 +49,7 @@ follow the rule. [[data-leakage|Data leakage]] is every way of breaking it by ac
 ### Where the error comes from
 
 Suppose the true relationship is some function `f(x)`, and every label you collect has random noise on top:
-`y = f(x) + noise`. You train a model on one sample of data. Its expected squared error on a new point splits into
+`y = f(x) + noise`. You train a model on one sample of data. Its expected [[mean-squared-error|squared error]] on a new point splits into
 three parts (Hastie, Tibshirani and Friedman, *The Elements of Statistical Learning*, section 7.3):
 
 | Part | What it measures | Goes down when |
